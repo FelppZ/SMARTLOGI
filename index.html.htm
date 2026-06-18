@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartLogi — Login</title>
+
+  <style>
+    :root{
+      --may-yellow:#ffe600; --may-black:#000; --may-white:#fff;
+      --gray-200:#9a9a9a; --border:#1b1b1b;
+      --shadow-2:0 10px 24px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,Roboto,"Segoe UI",Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 800px at 10% 10%, rgba(255,230,0,.08), transparent 60%),
+        radial-gradient(1000px 700px at 90% 80%, rgba(255,230,0,.06), transparent 60%),
+        linear-gradient(180deg,#0a0a0a 0%, #161616 100%);
+      color:#f4f4f4; overflow:hidden;
+    }
+
+    .login-split{position:fixed; inset:0; display:grid; grid-template-columns:1fr 1fr; height:100%;}
+    .left{display:grid; place-items:center; padding:32px; background:linear-gradient(180deg,#0d0d0d 0%, #121212 100%); border-right:1px solid #0f0f0f;}
+    .card{
+      width:min(92vw,480px);
+      background:linear-gradient(180deg, rgba(18,18,18,.96) 0%, rgba(12,12,12,.96) 100%);
+      border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-2); padding:24px;
+    }
+    .brand{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;}
+    .title{margin:0; color:var(--may-yellow); font-family:"Bahnschrift SemiBold","Bahnschrift","Segoe UI",Arial,sans-serif; font-weight:600; letter-spacing:.3px; font-size:22px;}
+    .sub{margin:0; color:var(--gray-200); font-size:12px;}
+
+    .form{display:grid; gap:12px; margin-top:12px;}
+    .label{font-size:12px; color:var(--gray-200); margin-bottom:4px; display:block;}
+    .input,.select{
+      width:100%; padding:12px; border-radius:10px; border:1px solid #262626; background:#0f0f0f; color:#f2f2f2; outline:none;
+    }
+    .input:focus,.select:focus{border-color:var(--may-yellow); box-shadow:0 0 0 3px rgba(255,230,0,.18);}
+    .actions{display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;}
+    .btn{
+      background:var(--may-yellow); color:var(--may-black); border:none; padding:12px 14px; border-radius:10px; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.15);
+      transition:transform .08s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.secondary{background:transparent; color:#fff; border:1px solid #2a2a2a;}
+    .error{color:#ff7a7a; font-size:12px; min-height:16px;}
+    .foot{margin-top:6px; font-size:12px; color:#bdbdbd;}
+
+    .right{position:relative; overflow:hidden; background:#0b0b0b;}
+    .bg{
+      position:absolute; inset:0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)),
+        url('https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png') center/cover no-repeat;
+    }
+
+    svg.lines{
+      position:absolute; inset:0; width:100%; height:100%;
+      filter: drop-shadow(0 0 6px rgba(255,230,0,.25));
+      pointer-events:none;
+    }
+    .conn{ stroke:#ffe600; stroke-width:2; fill:none; opacity:.85 }
+    .hub{ fill:#ffe600; opacity:.95 }
+    .hub-shadow{ fill:#ffe600; opacity:.18; filter:blur(6px) }
+
+    .glass{
+      position:absolute; inset:0; display:grid; place-items:end center; padding:28px; pointer-events:none;
+    }
+    .glass-card{
+      width:min(92%,720px);
+      border-radius:20px; border:1px solid rgba(255,255,255,.14);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter:blur(16px) saturate(120%); -webkit-backdrop-filter:blur(16px) saturate(120%);
+      box-shadow:0 10px 34px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+      padding:16px 20px; color:#f3f3f3; margin-bottom:24px;
+    }
+    .glass-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px;}
+    .glass-title{margin:0; font-weight:800; letter-spacing:.4px; color:#fff; font-size:18px; line-height:1.2;}
+    .glass-sub{margin:0; color:#ddd; font-size:12px; transition:opacity .4s ease;}
+    .glass-sub.hide{opacity:0}
+
+    @media (max-width:1024px){
+      .login-split{grid-template-columns:1fr}
+      .right{display:none}
+    }
+  </style>
+</head>
+<body>
+  <section class="login-split">
+    <div class="left">
+      <div class="card">
+        <div class="brand">
+          <h1 class="title">SmartLogi</h1>
+          <p class="sub">Acesso multi-tenant</p>
+        </div>
+
+        <form id="loginForm" class="form">
+          <div>
+            <label class="label" for="tenant">Tenant</label>
+            <input id="tenant" class="input" placeholder="ex.: demo, ADMIN, acme" required />
+          </div>
+          <div>
+            <label class="label" for="email">E-mail</label>
+            <input id="email" type="email" class="input" placeholder="usuario@empresa.com" required />
+          </div>
+          <div>
+            <label class="label" for="password">Senha</label>
+            <input id="password" type="password" class="input" placeholder="Sua senha" required />
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn">Entrar</button>
+            <a id="btnDemo" class="btn secondary" href="#">Entrar no Demo</a>
+          </div>
+
+          <div id="loginError" class="error"></div>
+          <div class="foot">SmartLogi v1.0</div>
+        </form>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="bg"></div>
+      <svg id="svgLines" class="lines" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+      <div class="glass">
+        <div class="glass-card">
+          <div class="glass-head">
+            <h3 class="glass-title">
+              Monitoramento Logístico
+              <br/>
+              Inteligente e Escalável
+            </h3>
+            <p id="glassMsg" class="glass-sub">Rotas totalmente mapeadas com acuracidade única</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // Ajuste aqui o identificador do painel admin
+    const ADMIN_TENANT = 'ADMIN';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdGFvV7d3bWUs7_pWlnVVncnZELWG9aIM",
+      authDomain: "automech-001.firebaseapp.com",
+      databaseURL: "https://automech-001-default-rtdb.firebaseio.com",
+      projectId: "automech-001",
+      storageBucket: "automech-001.firebasestorage.app",
+      messagingSenderId: "866346446102",
+      appId: "1:866346446102:web:6d2367ec228b406ccdf437",
+      measurementId: "G-X6XV23VDDJ"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const APP_URL = 'view.html';
+    const ADMIN_URL = 'admin.html';
+    const $ = (s)=>document.querySelector(s);
+    const form = $('#loginForm');
+    const err = $('#loginError');
+    const btnDemo = $('#btnDemo');
+    const tenantInput = $('#tenant');
+    const emailInput = $('#email');
+
+    // Decide rota pós-login com base no tenant informado
+    function routeAfterLogin() {
+      const tenantRaw = (tenantInput?.value || 'demo').trim();
+      const tenantUp = tenantRaw.toUpperCase();
+      if (tenantUp === ADMIN_TENANT) {
+        location.href = ADMIN_URL;
+      } else {
+        location.href = `${APP_URL}?tenant=${encodeURIComponent(tenantRaw)}`;
+      }
+    }
+
+    // Se já estiver logado, direciona imediatamente conforme o tenant digitado (ou 'demo' default)
+    onAuthStateChanged(auth, (user) => {
+      if (user) routeAfterLogin();
+    });
+
+    // Login com e-mail/senha
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.textContent = '';
+      const email  = emailInput.value.trim();
+      const pass   = $('#password').value;
+      if (!email || !pass) { err.textContent = 'Informe e-mail e senha.'; return; }
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        routeAfterLogin();
+      } catch (e) {
+        // Mensagem amigável
+        const msg = e?.code === 'auth/invalid-credential' ? 'Credenciais inválidas.'
+                  : e?.code === 'auth/user-not-found'     ? 'Usuário não encontrado.'
+                  : e?.code === 'auth/wrong-password'     ? 'Senha incorreta.'
+                  : e?.message || 'Falha no login.';
+        err.textContent = msg;
+      }
+    });
+
+    // Demo: login anônimo e vai para tenant=demo
+    btnDemo.addEventListener('click', async (e)=>{
+      e.preventDefault();
+      err.textContent = '';
+      try {
+        tenantInput.value = 'demo'; // garante a rota demo
+        await signInAnonymously(auth);
+        routeAfterLogin();
+      } catch (e) {
+        err.textContent = e?.message || 'Falha no login anônimo';
+      }
+    });
+
+    // Mensagens rotativas no glass (lado direito)
+    const messages = [
+      'Rotas totalmente mapeadas com acuracidade única',
+      'Monitoramento em tempo real da sua frota com alta performance',
+      'Acesso multi-tenant seguro e flexível para sua operação',
+      'Integrações simples entre veículos e armazéns em diferentes locais',
+      'Controle automático e gestão logística em nuvem'
+    ];
+    const msgEl = document.getElementById('glassMsg');
+    let idx = 0;
+    setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      msgEl.classList.add('hide');
+      setTimeout(() => { msgEl.textContent = messages[idx]; msgEl.classList.remove('hide'); }, 350);
+    }, 6000);
+
+    // SVG decorativo de hubs e conexões
+    const svg = document.getElementById('svgLines');
+    const hubs = [
+      { x: 150, y: 700 }, { x: 250, y: 520 }, { x: 420, y: 610 }, { x: 600, y: 480 },
+      { x: 760, y: 580 }, { x: 820, y: 320 }, { x: 680, y: 260 }, { x: 540, y: 350 }
+    ];
+    hubs.forEach(h => {
+      const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      glow.setAttribute('class', 'hub-shadow'); glow.setAttribute('cx', h.x); glow.setAttribute('cy', h.y); glow.setAttribute('r', 12);
+      svg.appendChild(glow);
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('class', 'hub'); dot.setAttribute('cx', h.x); dot.setAttribute('cy', h.y); dot.setAttribute('r', 3.5);
+      svg.appendChild(dot);
+    });
+    function makeCurve(a, b) {
+      const dx = (b.x - a.x), dy = (b.y - a.y);
+      const mx = a.x + dx * 0.5 + (Math.random() - 0.5) * 80;
+      const my = a.y + dy * 0.5 + (Math.random() - 0.5) * 60;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('class', 'conn');
+      path.setAttribute('d', `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`);
+      path.style.strokeDasharray = '1, 8';
+      path.style.animation = `dashFlow ${2.6 + Math.random()*1.6}s linear infinite`;
+      svg.appendChild(path);
+      return path;
+    }
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes dashFlow {
+        0%   { stroke-dashoffset: 0;   opacity: .65; }
+        50%  { stroke-dashoffset: 40;  opacity: .95; }
+        100% { stroke-dashoffset: 80;  opacity: .65; }
+      }
+    `;
+    document.head.appendChild(style);
+    const paths = [];
+    for (let i = 0; i < hubs.length; i++) { const j = Math.floor(Math.random() * hubs.length); if (j !== i) paths.push(makeCurve(hubs[i], hubs[j])); }
+    for (let i = 0; i < hubs.length - 1; i++) { paths.push(makeCurve(hubs[i], hubs[i+1])); }
+    let tVar = 0;
+    function animateLines(){
+      tVar += 0.016;
+      for (const p of paths){
+        const w = 1.8 + Math.sin(tVar + Math.random()) * 0.4;
+        p.style.strokeWidth = w.toFixed(2);
+      }
+      requestAnimationFrame(animateLines);
+    }
+    animateLines();
+    function fitSvg(){ svg.setAttribute('viewBox', `0 0 1000 1000`); svg.setAttribute('preserveAspectRatio', 'xMidYMid slice'); }
+    window.addEventListener('resize', fitSvg); fitSvg();
+  </script>
+</body>
+</html>

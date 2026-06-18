@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartLogi — Cadastro</title>
+
+  <style>
+    :root{
+      --may-yellow:#ffe600; --may-black:#000; --may-white:#fff;
+      --gray-100:#e5e5e5; --gray-200:#9a9a9a; --gray-700:#2a2a2a;
+      --panel:#101010; --panel-2:#0c0c0c; --border:#1b1b1b;
+      --radius:14px; --shadow-1:0 2px 8px rgba(0,0,0,.15); --shadow-2:0 10px 24px rgba(0,0,0,.25);
+      --accent:#ffe600;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,Roboto,"Segoe UI",Helvetica,Arial,sans-serif;
+      background: linear-gradient(180deg,#0a0a0a 0%, #161616 100%);
+      color:#f4f4f4;
+      overflow-y:auto;
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      display:grid; grid-template-rows:72px 1fr;
+      min-height:100vh;
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between; padding:0 16px; height:72px;
+      background:var(--accent); color:var(--may-black); box-shadow:0 2px 8px rgba(0,0,0,.12);
+    }
+    /* Brand com logo + título */
+    .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .brand-logo{
+      display:none; width:auto; height:36px; max-width:220px; object-fit:contain;
+      border-radius:6px; background:#fff0;
+    }
+    .title{margin:0; font-family:"Bahnschrift SemiBold","Bahnschrift","Segoe UI",Arial,sans-serif; font-size:20px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+    .tenant{padding:4px 8px; border-radius:999px; background:#0c0c0c; border:1px solid #2a2a2a; color:#fff; font-size:11px;}
+    .head-actions{display:flex; gap:8px; align-items:center;}
+    .btn-h{ background:#000; color:#ffe600; border:1px solid #000; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer; }
+
+    main{
+      display:grid; grid-template-columns: minmax(360px,520px) 1fr;
+      gap:16px; padding:16px;
+      min-height: calc(100vh - 72px);
+    }
+
+    .panel{
+      background:linear-gradient(180deg,#121212 0%,#101010 100%);
+      border:1px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow-1);
+      max-height: calc(100vh - 72px - 32px);
+      overflow:auto;
+    }
+    .panel h3{margin:0 0 12px; color:var(--accent); font-size:16px;}
+
+    .type-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+    .type-card{
+      display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px;
+      padding:12px; border:1px solid #202020; border-radius:12px;
+      background:linear-gradient(180deg,#131313 0%, #0f0f0f 100%);
+      cursor:pointer; transition: transform .08s ease, border-color .2s ease, background .2s ease;
+    }
+    .type-card:hover{transform:translateY(-1px)}
+    .type-card.active{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent);}
+    .icon{
+      width:46px; height:46px; border-radius:10px; display:grid; place-items:center;
+      background:#0c0c0c; border:1px solid #2a2a2a; overflow:hidden;
+    }
+    .icon svg{width:28px; height:28px; fill:#ffe600}
+    .t-title{font-weight:700;}
+    .t-desc{font-size:12px; color:#bdbdbd;}
+    .check{color:var(--accent); font-size:18px;}
+
+    .form-grid{display:grid; gap:10px;}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    .label{font-size:12px; color:var(--gray-200); margin-bottom:4px;}
+    .input,.select,textarea{
+      width:100%; padding:12px; border-radius:10px; border:1px solid #262626; background:#0f0f0f; color:#f2f2f2; outline:none;
+    }
+    .input:focus,.select:focus,textarea:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,230,0,.18);}
+    textarea{ min-height:90px; resize:vertical; }
+
+    .badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:800; }
+    .badge.ok{ background:#22c55e; color:#001b07; }
+    .badge.warn{ background:#f59e0b; color:#1a1200; }
+    .hint{ font-size:12px; color:#bdbdbd; }
+
+    .map-mini{
+      height:220px; border:1px solid #202020; border-radius:12px; background:#0d0d0d;
+      display:none; overflow:hidden;
+    }
+    .map-mini.show{ display:block; }
+
+    .plate-wrap{display:grid; gap:10px;}
+    .plate-stage{
+      position:relative;
+      width:100%; max-width:560px; height:200px;
+      border-radius:12px; overflow:hidden; border:1px solid #1f1f1f;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.35)),
+        url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat;
+      box-shadow:0 12px 28px rgba(0,0,0,.35);
+      display:grid; place-items:center;
+      padding:16px;
+    }
+    .plate-view{
+      position:relative;
+      width:min(100%, 460px);
+      aspect-ratio: 520 / 120;
+      border-radius:10px; overflow:hidden;
+      box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.2);
+      background: #f7f7f7;
+    }
+    .plate-bg-img{
+      position:absolute; inset:0;
+      background:
+        url('https://brasilblanks.com.br/wp-content/uploads/2019/12/blankveiculosmercosul1.png') center/contain no-repeat;
+      opacity: .98; filter: saturate(1.05);
+    }
+    .plate-text{
+      position:absolute; inset:0; display:grid; place-items:center;
+      font-family: "Bahnschrift","Segoe UI",Arial,sans-serif;
+      font-weight:900; letter-spacing:3px; font-size:40px; color:#0c0c0c;
+      text-shadow:0 1px 0 #fff, 0 0 4px rgba(0,0,0,.18);
+      padding-top: 22px;
+    }
+
+    .summary{font-size:14px; color:#ddd; white-space:pre-line;}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    .btn{
+      background:var(--accent); color:var(--may-black); border:none; padding:12px 14px; border-radius:10px; font-weight:800; cursor:pointer; box-shadow:var(--shadow-1);
+      transition:transform .08s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.secondary{background:transparent; color:#fff; border:1px solid #2a2a2a;}
+
+    @media (max-width:1100px){
+      main{grid-template-columns:100%; grid-template-rows:auto auto; height:auto;}
+      .panel{ max-height: none; }
+    }
+
+    /* Modal */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.5);
+      display:none; align-items:center; justify-content:center; z-index:9999;
+      backdrop-filter: blur(2px);
+    }
+    .modal{
+      width:min(92vw, 520px);
+      background:linear-gradient(180deg,#151515 0%, #101010 100%);
+      border:1px solid var(--border); border-radius:14px; color:#f2f2f2;
+      box-shadow:0 18px 42px rgba(0,0,0,.45);
+      padding:16px;
+      transform: translateY(8px);
+      opacity:0; transition: opacity .15s ease, transform .15s ease;
+    }
+    .modal-backdrop.show{ display:flex; }
+    .modal-backdrop.show .modal{ opacity:1; transform:none; }
+    .modal-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .modal-title{ margin:0; font-weight:800; color:#ffe600; font-size:16px; }
+    .modal-body{ margin-top:8px; color:#ddd; white-space:pre-line; }
+    .modal-actions{ margin-top:14px; display:flex; gap:8px; justify-content:flex-end; }
+    .m-btn{ background:#ffe600; color:#000; border:none; padding:10px 12px; border-radius:10px; font-weight:800; cursor:pointer; }
+    .m-btn.secondary{ background:transparent; color:#fff; border:1px solid #2a2a2a; }
+
+    /* Loading overlay */
+    .loading{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9998;
+      background:rgba(0,0,0,.45); backdrop-filter: blur(2px);
+    }
+    .loading.show{ display:flex; }
+    .spinner{
+      width:72px; height:72px; border-radius:50%;
+      border:6px solid rgba(255,230,0,.25); border-top-color:#ffe600;
+      animation: spin 1s linear infinite; box-shadow: 0 0 24px rgba(255,230,0,.25);
+    }
+    .loading-msg{
+      margin-top:12px; color:#ffe600; font-weight:800; text-align:center; text-shadow:0 1px 0 #000;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-box{
+      display:grid; place-items:center; gap:8px;
+      background:linear-gradient(180deg, rgba(20,20,20,.9), rgba(12,12,12,.9));
+      border:1px solid #1f1f1f; padding:16px 18px; border-radius:12px;
+      box-shadow:0 18px 42px rgba(0,0,0,.45);
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img id="tenantLogo" class="brand-logo" alt="Logo do tenant"/>
+        <h1 id="brandTitle" class="title">SmartLogi — Cadastro</h1>
+      </div>
+      <div class="head-actions">
+        <span id="tenantChip" class="tenant">tenant: demo</span>
+        <button id="btnList" class="btn-h" title="Menu">Menu</button>
+        <button id="btnLogout" class="btn-h" title="Sair">Sair</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Seletor de tipo -->
+      <section class="panel">
+        <h3>Tipo de cadastro</h3>
+        <div class="type-grid" id="typeGrid">
+          <div class="type-card" data-type="truck" title="Caminhão">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img" aria-label="Caminhão">
+                <path d="M3 3h11v8h5l2 3v4h-2a3 3 0 0 1-6 0H9a3 3 0 0 1-6 0H2V5a2 2 0 0 1 2-2Zm13 10V7h2l2 3v3h-4ZM6 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm10 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="t-title">Caminhão</div>
+              <div class="t-desc">Cadastro de veículo pesado para transporte rodoviário.</div>
+            </div>
+            <div class="check">○</div>
+          </div>
+
+          <div class="type-card" data-type="van" title="Van">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img" aria-label="Van">
+                <path d="M3 6h11l4 4h3v6h-1a3 3 0 0 1-6 0H9a3 3 0 0 1-6 0H2V8a2 2 0 0 1 2-2Zm16 4-3-3h-2v3h5ZM6 18a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm10 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="t-title">Van</div>
+              <div class="t-desc">Veículo leve para entregas urbanas e rotas rápidas.</div>
+            </div>
+            <div class="check">○</div>
+          </div>
+
+          <div class="type-card" data-type="storage" title="Armazenamento">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img" aria-label="Armazenamento">
+                <path d="M3 9 12 4l9 5v10h-2V10l-7-4-7 4v9H3V9Zm3 4h12v6H6v-6Zm2 2v2h8v-2H8Z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="t-title">Armazenamento</div>
+              <div class="t-desc">Cadastro de unidade de armazenagem (hub, CD, depósito).</div>
+            </div>
+            <div class="check">○</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Formulários -->
+      <section class="panel">
+        <h3 id="formTitle">Detalhes do cadastro</h3>
+
+        <!-- Veículos -->
+        <div id="vehFields" style="display:none;">
+          <div class="form-grid">
+            <div class="row">
+              <div>
+                <div class="label">Título</div>
+                <input id="f-titulo" class="input" placeholder="Ex.: Caminhão 6x2, Van 1.6"/>
+              </div>
+              <div>
+                <div class="label">Descrição</div>
+                <input id="f-desc" class="input" placeholder="Complementos úteis"/>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="label">Modelo</div>
+                <input id="f-modelo" class="input" placeholder="Ex.: Volvo FH 460, Sprinter 415"/>
+              </div>
+              <div>
+                <div class="label">Ano</div>
+                <input id="f-ano" type="number" min="1990" max="2099" class="input" placeholder="Ex.: 2022"/>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="label">Cor</div>
+                <input id="f-cor" class="input" placeholder="Ex.: Branco, Prata"/>
+              </div>
+              <div>
+                <div class="label">Capacidade (kg)</div>
+                <input id="f-capacidade" type="number" min="0" max="40000" class="input" placeholder="Ex.: 18000"/>
+              </div>
+            </div>
+
+            <div class="plate-wrap">
+              <div class="label">Placa (Mercosul)</div>
+              <input id="f-placa" class="input" maxlength="7" placeholder="ABC1D23"/>
+              <div class="plate-stage">
+                <div class="plate-view" aria-label="Visualização da placa">
+                  <div class="plate-bg-img"></div>
+                  <div id="plateText" class="plate-text">ABC1D23</div>
+                </div>
+              </div>
+              <div class="hint">A imagem da placa é apenas ilustrativa; digite para atualizar.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Armazém -->
+        <div id="storFields" style="display:none;">
+          <!-- Informações -->
+          <div class="form-grid">
+            <h4 style="margin:6px 0; color:#ffe600;">Informações</h4>
+            <div class="row">
+              <div>
+                <div class="label">Nome do armazém</div>
+                <input id="s-nome" class="input" placeholder="Ex.: Depósito Zona Norte"/>
+              </div>
+              <div>
+                <div class="label">Tipo de unidade</div>
+                <select id="s-tipo" class="select">
+                  <option value="CD">Centro de Distribuição</option>
+                  <option value="Depósito">Depósito</option>
+                  <option value="Hub Urbano">Hub Urbano</option>
+                  <option value="Armazém Geral">Armazém Geral</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="label">Capacidade (m³)</div>
+                <input id="s-capacidade" type="number" min="0" class="input" placeholder="Ex.: 1200"/>
+              </div>
+              <div>
+                <div class="label">Status do endereço</div>
+                <span id="s-status" class="badge warn">Pendente</span>
+              </div>
+            </div>
+            <div>
+              <div class="label">Descrição</div>
+              <textarea id="s-desc" placeholder="Observações gerais, particularidades, horários etc."></textarea>
+            </div>
+          </div>
+
+          <!-- Endereço -->
+          <div class="form-grid" style="margin-top:10px;">
+            <h4 style="margin:6px 0; color:#ffe600;">Endereço</h4>
+            <div class="row">
+              <div>
+                <div class="label">CEP</div>
+                <input id="e-cep" class="input" placeholder="00000-000"/>
+              </div>
+              <div>
+                <div class="label">UF</div>
+                <input id="e-uf" class="input" maxlength="2" placeholder="SP"/>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="label">Cidade</div>
+                <input id="e-cidade" class="input" placeholder="São Paulo"/>
+              </div>
+              <div>
+                <div class="label">Bairro</div>
+                <input id="e-bairro" class="input" placeholder="Centro"/>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="label">Logradouro</div>
+                <input id="e-logradouro" class="input" placeholder="Rua/Av. Nome"/>
+              </div>
+              <div>
+                <div class="label">Número</div>
+                <input id="e-numero" class="input" placeholder="123"/>
+              </div>
+            </div>
+            <div>
+              <div class="label">Complemento</div>
+              <input id="e-complemento" class="input" placeholder="Bloco, sala, referência (opcional)"/>
+            </div>
+
+            <div class="actions" style="margin-top:10px;">
+              <button id="btnValidarEnd" class="btn">Validar endereço</button>
+              <button id="btnLimparEnd" class="btn secondary">Limpar endereço</button>
+            </div>
+
+            <div id="mapMini" class="map-mini"></div>
+            <div id="addrNormalized" class="hint" style="margin-top:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Resumo e ações -->
+        <div class="panel" style="margin-top:12px;">
+          <h3>Resumo</h3>
+          <div id="summary" class="summary">Selecione um tipo e preencha os campos.</div>
+          <div class="actions">
+            <button id="btnSalvar" class="btn">Salvar</button>
+            <button id="btnLimparAll" class="btn secondary">Limpar</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head"><h4 id="modalTitle" class="modal-title">Aviso</h4></div>
+      <div id="modalBody" class="modal-body">Mensagem...</div>
+      <div class="modal-actions">
+        <button id="modalCancel" class="m-btn secondary">Cancelar</button>
+        <button id="modalOk" class="m-btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading" aria-hidden="true">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div id="loadingMsg" class="loading-msg">Carregando...</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdGFvV7d3bWUs7_pWlnVVncnZELWG9aIM",
+      authDomain: "automech-001.firebaseapp.com",
+      databaseURL: "https://automech-001-default-rtdb.firebaseio.com",
+      projectId: "automech-001",
+      storageBucket: "automech-001.firebasestorage.app",
+      messagingSenderId: "866346446102",
+      appId: "1:866346446102:web:6d2367ec228b406ccdf437",
+      measurementId: "G-X6XV23VDDJ"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const $ = s => document.querySelector(s);
+
+    // Loading
+    const loadingEl = $('#loading');
+    const loadingMsg = $('#loadingMsg');
+    function showLoading(msg='Carregando...'){ loadingMsg.textContent = msg; loadingEl.classList.add('show'); }
+    function hideLoading(){ loadingEl.classList.remove('show'); }
+
+    // Modal
+    const modal = {
+      back: $('#modalBackdrop'), title: $('#modalTitle'), body: $('#modalBody'), ok: $('#modalOk'), cancel: $('#modalCancel'),
+      open({ title='Aviso', body='Mensagem...', okText='OK', cancelText='Cancelar', showCancel=false }={}){
+        this.title.textContent = title; this.body.textContent = body; this.ok.textContent = okText; this.cancel.textContent = cancelText;
+        this.cancel.style.display = showCancel ? 'inline-block' : 'none'; this.back.classList.add('show');
+        return new Promise(resolve => {
+          const onOk = ()=>{ cleanup(); resolve(true); };
+          const onCancel = ()=>{ cleanup(); resolve(false); };
+          const cleanup = ()=>{ this.ok.removeEventListener('click', onOk); this.cancel.removeEventListener('click', onCancel); this.back.classList.remove('show'); };
+          this.ok.addEventListener('click', onOk, { once:true }); this.cancel.addEventListener('click', onCancel, { once:true });
+          const outside = (e)=>{ if(e.target===this.back){ cleanup(); resolve(false); this.back.removeEventListener('click', outside); } };
+          this.back.addEventListener('click', outside);
+        });
+      }
+    };
+    const alertModal = (title, body)=> modal.open({ title, body, okText:'OK', showCancel:false });
+
+    // Proteção
+    onAuthStateChanged(auth, (user) => { if (!user) location.href = 'index.html'; });
+
+    // Tenant e navegação
+    const params = new URLSearchParams(location.search);
+    const tenant = (params.get('tenant') || 'demo').trim();
+    $('#tenantChip').textContent = `tenant: ${tenant}`;
+    $('#btnList').addEventListener('click', async ()=>{ showLoading('Abrindo lista...'); location.href = `view.html?tenant=${encodeURIComponent(tenant)}`; });
+    $('#btnLogout').addEventListener('click', async ()=>{ showLoading('Saindo...'); try{ await signOut(auth); location.href='index.html'; } finally { hideLoading(); } });
+
+    // Header Brand: carregar logo e nome do tenant
+    async function setupBrand(){
+      try{
+        const metaRef = doc(db, 'tenants_meta', tenant);
+        const snap = await getDoc(metaRef);
+        const data = snap.exists() ? snap.data() : {};
+        const logoUrl = data.logoUrl || '';
+        const tenantName = data.name || tenant;
+
+        const logoEl = $('#tenantLogo');
+        const titleEl = $('#brandTitle');
+
+        if (logoUrl) {
+          logoEl.src = logoUrl;
+          logoEl.style.display = 'block';
+          titleEl.textContent = 'SmartLogi — Cadastro';
+          logoEl.onerror = () => {
+            logoEl.style.display = 'none';
+            titleEl.textContent = `${tenantName} — SmartLogi — Cadastro`;
+          };
+        } else {
+          logoEl.style.display = 'none';
+          titleEl.textContent = `${tenantName} — SmartLogi — Cadastro`;
+        }
+      } catch (e) {
+        $('#tenantLogo').style.display = 'none';
+        $('#brandTitle').textContent = `${tenant} — SmartLogi — Cadastro`;
+      }
+    }
+    await setupBrand();
+
+    // Estado geral
+    const VIEW_URL = 'view.html';
+    let currentType = null;
+
+    // Seletor de tipo
+    const typeGrid = $('#typeGrid');
+    typeGrid.querySelectorAll('.type-card').forEach(card => {
+      card.addEventListener('click', () => {
+        currentType = card.getAttribute('data-type');
+        typeGrid.querySelectorAll('.type-card').forEach(c => { c.classList.remove('active'); c.querySelector('.check').textContent = '○'; });
+        card.classList.add('active'); card.querySelector('.check').textContent = '●';
+        if (currentType === 'truck' || currentType === 'van') {
+          $('#vehFields').style.display = 'block'; $('#storFields').style.display = 'none'; $('#formTitle').textContent = 'Cadastro de Veículo';
+        } else {
+          $('#vehFields').style.display = 'none'; $('#storFields').style.display = 'block'; $('#formTitle').textContent = 'Cadastro de Armazém';
+        }
+        updateSummary();
+      });
+    });
+
+    // Veículo: placa preview
+    const fPlaca = $('#f-placa'), plateText = $('#plateText');
+    fPlaca?.addEventListener('input', () => {
+      const val = fPlaca.value.toUpperCase().replace(/[^A-Z0-9]/g,''); fPlaca.value = val; plateText.textContent = val || 'ABC1D23';
+    });
+
+    // Armazém
+    const stor = {
+      nome: $('#s-nome'), tipo: $('#s-tipo'), capacidade: $('#s-capacidade'), desc: $('#s-desc'),
+      cep: $('#e-cep'), uf: $('#e-uf'), cidade: $('#e-cidade'), bairro: $('#e-bairro'),
+      logradouro: $('#e-logradouro'), numero: $('#e-numero'), complemento: $('#e-complemento'),
+      status: $('#s-status'), normalized: $('#addrNormalized'), btnValidar: $('#btnValidarEnd'), btnLimpar: $('#btnLimparEnd'),
+      mapDiv: $('#mapMini')
+    };
+    let geocoded = { ok:false, lat:null, lng:null, addressStr:'' };
+    let miniMap = null, miniMarker = null;
+
+    function setStatus(ok, text){
+      geocoded.ok = ok;
+      stor.status.textContent = text || (ok ? 'Validado' : 'Pendente');
+      stor.status.className = 'badge ' + (ok ? 'ok' : 'warn');
+    }
+
+    // invalidar status ao editar campos
+    ['e-cep','e-uf','e-cidade','e-bairro','e-logradouro','e-numero','e-complemento'].forEach(id=>{
+      $('#'+id).addEventListener('input', ()=>{
+        if (geocoded.ok) setStatus(false, 'Pendente');
+        updateSummary();
+      });
+    });
+
+    // CEP mask
+    function maskCEP(v){
+      const n = (v||'').replace(/\D/g,'').slice(0,8);
+      if (n.length <= 5) return n;
+      return n.slice(0,5) + '-' + n.slice(5);
+    }
+    stor.cep.addEventListener('input', ()=>{ stor.cep.value = maskCEP(stor.cep.value); });
+
+    // ViaCEP
+    async function fetchViaCEP(cep){
+      const clean = (cep||'').replace(/\D/g,'');
+      if (clean.length !== 8) throw new Error('CEP inválido');
+      const url = `https://viacep.com.br/ws/${clean}/json/`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Falha ao consultar ViaCEP');
+      const data = await resp.json();
+      if (data.erro) throw new Error('CEP não encontrado');
+      return data;
+    }
+    async function autofillFromCEP(){
+      const cepVal = maskCEP(stor.cep.value);
+      stor.cep.value = cepVal;
+      const clean = cepVal.replace(/\D/g,'');
+      if (clean.length !== 8) return;
+
+      showLoading('Consultando CEP...');
+      try{
+        const d = await fetchViaCEP(cepVal);
+        stor.uf.value = (d.uf || '').toUpperCase();
+        stor.cidade.value = d.localidade || '';
+        stor.bairro.value = d.bairro || '';
+        stor.logradouro.value = d.logradouro || '';
+        setStatus(false, 'Pendente');
+        stor.normalized.textContent = `CEP reconhecido: ${d.cep} — ${d.logradouro || ''} ${d.bairro ? '- '+d.bairro : ''}, ${d.localidade || ''} - ${d.uf || ''}`;
+      }catch(e){
+        await alertModal('CEP', e?.message || 'Não foi possível consultar o CEP.');
+      }finally{
+        hideLoading();
+        updateSummary();
+      }
+    }
+    stor.cep.addEventListener('blur', autofillFromCEP);
+
+    // Address string + variantes (considerando número quando disponível)
+    function buildAddressString(){
+      const parts = [
+        stor.logradouro.value, stor.numero.value,
+        stor.bairro.value, stor.cidade.value, stor.uf.value,
+        stor.cep.value
+      ].filter(Boolean);
+      return parts.join(', ');
+    }
+    function buildAddrVariants() {
+      const cep = stor.cep.value;
+      const uf = stor.uf.value;
+      const cidade = stor.cidade.value;
+      const bairro = stor.bairro.value;
+      const logradouro = stor.logradouro.value;
+      const numero = stor.numero.value;
+
+      const variants = [];
+      if (logradouro && numero && cidade && uf) variants.push([logradouro, numero, bairro, cidade, uf, cep].filter(Boolean).join(', '));
+      if (logradouro && numero && cidade && uf) variants.push([logradouro, numero, cidade, uf].filter(Boolean).join(', '));
+      if (logradouro && cidade && uf) variants.push([logradouro, bairro, cidade, uf].filter(Boolean).join(', '));
+      if (logradouro && cidade && uf) variants.push([logradouro, cidade, uf].filter(Boolean).join(', '));
+      if (numero && bairro && cidade && uf) variants.push([numero, bairro, cidade, uf].filter(Boolean).join(', '));
+      if (bairro && cidade && uf) variants.push([bairro, cidade, uf].filter(Boolean).join(', '));
+      if (cidade && uf) variants.push([cidade, uf].filter(Boolean).join(', '));
+      if (cep) variants.push(cep);
+      if (cidade && uf) variants.push([cidade, uf, 'Brasil'].join(', '));
+      return [...new Set(variants.filter(Boolean))];
+    }
+
+    async function geocodeNominatim(q) {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&addressdetails=1&countrycodes=br`;
+      const resp = await fetch(url, { headers: { 'Accept':'application/json' }});
+      if (!resp.ok) throw new Error('Falha no geocoder');
+      const data = await resp.json();
+      if (!data || !data.length) throw new Error('Endereço não encontrado');
+      const r = data[0];
+      return { lat: parseFloat(r.lat), lng: parseFloat(r.lon), display: r.display_name };
+    }
+    async function validateAddressProgressive() {
+      const variants = buildAddrVariants();
+      let lastError = null;
+      for (const q of variants) {
+        try {
+          const r = await geocodeNominatim(q);
+          return { ok: true, lat: r.lat, lng: r.lng, display: r.display, query: q, approx: !/^\d/.test(q) && (q.split(',').length <= 2) };
+        } catch (e) { lastError = e; }
+      }
+      const city = stor.cidade.value;
+      const uf = stor.uf.value;
+      if (city || uf) {
+        const q = [city, uf, 'Brasil'].filter(Boolean).join(', ');
+        const r = await geocodeNominatim(q);
+        return { ok: true, lat: r.lat, lng: r.lng, display: r.display, query: q, approx: true };
+      }
+      throw lastError || new Error('Não foi possível validar o endereço');
+    }
+
+    function ensureMiniMap(){
+      if (miniMap) return miniMap;
+      stor.mapDiv.classList.add('show');
+      miniMap = L.map(stor.mapDiv, { zoomControl:true }).setView([-15.78,-47.93], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap'}).addTo(miniMap);
+      return miniMap;
+    }
+
+    stor.btnValidar.addEventListener('click', async ()=>{
+      const cepClean = (stor.cep.value || '').replace(/\D/g, '');
+      const hasCEP = cepClean.length === 8;
+      const hasCityUF = !!stor.cidade.value && !!stor.uf.value;
+      const hasSomeDetail = !!stor.logradouro.value || !!stor.bairro.value || !!stor.numero.value;
+
+      if (!hasCEP && !(hasCityUF && hasSomeDetail)) {
+        await alertModal('Validação', 'Informe ao menos um CEP válido (8 dígitos) OU Cidade+UF com algum detalhe (logradouro, bairro ou número).');
+        return;
+      }
+
+      showLoading('Validando endereço...');
+      try{
+        const r = await validateAddressProgressive();
+        geocoded = { ok:true, lat:r.lat, lng:r.lng, addressStr:r.display };
+        setStatus(true, r.approx ? 'Validado (aprox.)' : 'Validado');
+        stor.normalized.textContent = `Endereço reconhecido: ${r.display} ${r.approx ? '• localização aproximada' : ''}`;
+
+        const m = ensureMiniMap();
+        if (miniMarker) miniMap.removeLayer(miniMarker);
+        miniMarker = L.marker([r.lat, r.lng], { icon: L.divIcon({ className:'', html:`<div style="width:16px;height:16px;border-radius:50%;background:#ffe600;border:2px solid #000;"></div>` }) }).addTo(m);
+        m.setView([r.lat, r.lng], r.approx ? 12 : 16);
+      }catch(e){
+        setStatus(false, 'Pendente');
+        stor.normalized.textContent = 'Não foi possível validar o endereço. Tente completar mais campos ou ajustar o CEP.';
+        await alertModal('Validação', e?.message || 'Endereço não encontrado.');
+      }finally{
+        hideLoading();
+        updateSummary();
+      }
+    });
+
+    stor.btnLimpar.addEventListener('click', ()=>{
+      ['cep','uf','cidade','bairro','logradouro','numero','complemento'].forEach(k => stor[k].value='');
+      geocoded = { ok:false, lat:null, lng:null, addressStr:'' };
+      setStatus(false, 'Pendente');
+      stor.normalized.textContent = '';
+      if (miniMarker && miniMap){ miniMap.removeLayer(miniMarker); miniMarker=null; }
+      stor.mapDiv.classList.remove('show');
+      updateSummary();
+    });
+
+    // Limpar geral
+    $('#btnLimparAll').addEventListener('click', ()=>{
+      currentType = null;
+      typeGrid.querySelectorAll('.type-card').forEach(c => { c.classList.remove('active'); c.querySelector('.check').textContent = '○'; });
+      ['f-titulo','f-desc','f-modelo','f-ano','f-cor','f-capacidade','f-placa'].forEach(id => { const el = $('#'+id); if (el){ el.value=''; } });
+      const plateText = $('#plateText'); if (plateText) plateText.textContent='ABC1D23';
+      stor.btnLimpar.click();
+      stor.tipo.selectedIndex = 0; stor.nome.value=''; stor.capacidade.value=''; stor.desc.value='';
+      $('#vehFields').style.display = 'none'; $('#storFields').style.display = 'none'; $('#formTitle').textContent = 'Detalhes do cadastro';
+      updateSummary();
+    });
+
+    // Resumo
+    function updateSummary() {
+      let s = '';
+      if (!currentType){ $('#summary').textContent = 'Selecione um tipo e preencha os campos.'; return; }
+
+      if (currentType==='truck' || currentType==='van'){
+        const t = currentType==='truck' ? 'Caminhão' : 'Van';
+        s += `Tipo: ${t}\n`;
+        const titulo = $('#f-titulo').value.trim(); if (titulo) s += `Título: ${titulo}\n`;
+        const desc = $('#f-desc').value.trim(); if (desc) s += `Descrição: ${desc}\n`;
+        const modelo = $('#f-modelo').value.trim(); if (modelo) s += `Modelo: ${modelo}\n`;
+        const ano = $('#f-ano').value; if (ano) s += `Ano: ${ano}\n`;
+        const cor = $('#f-cor').value.trim(); if (cor) s += `Cor: ${cor}\n`;
+        const cap = $('#f-capacidade').value; if (cap) s += `Capacidade: ${cap} kg\n`;
+        const placa = $('#f-placa').value.trim().toUpperCase(); if (placa) s += `Placa: ${placa}\n`;
+      } else {
+        s += `Tipo: Armazém\n`;
+        const nome = stor.nome.value.trim(); if (nome) s += `Nome: ${nome}\n`;
+        s += `Unidade: ${stor.tipo.value}\n`;
+        const cap = stor.capacidade.value; if (cap) s += `Capacidade: ${cap} m³\n`;
+        const d = stor.desc.value.trim(); if (d) s += `Descrição: ${d}\n`;
+        s += `Endereço: ${buildAddressString() || '—'}\n`;
+        s += `Status do endereço: ${geocoded.ok ? stor.status.textContent : 'Pendente'}\n`;
+        if (geocoded.ok) s += `Lat/Lng: ${geocoded.lat}, ${geocoded.lng}\n`;
+      }
+      $('#summary').textContent = s || 'Preencha os campos para ver o resumo.';
+    }
+
+    // Atualiza resumo on input
+    ['f-titulo','f-desc','f-modelo','f-ano','f-cor','f-capacidade','f-placa'].forEach(id => $('#'+id)?.addEventListener('input', updateSummary));
+    ['s-nome','s-tipo','s-capacidade','s-desc','e-cep','e-uf','e-cidade','e-bairro','e-logradouro','e-numero','e-complemento'].forEach(id => $('#'+id)?.addEventListener('input', updateSummary));
+    $('#s-tipo')?.addEventListener('change', updateSummary);
+
+    // Persistência
+    async function saveDoc(payload, tenantId){
+      const ref = doc(db, 'tenants', tenantId, 'vehicles', payload.id);
+      await setDoc(ref, { ...payload, createdAt: serverTimestamp() }, { merge: true });
+    }
+
+    // Salvar
+    $('#btnSalvar').addEventListener('click', async ()=>{
+      if (!currentType){ await alertModal('Validação', 'Selecione um tipo de cadastro.'); return; }
+
+      if (currentType==='truck' || currentType==='van'){
+        const base = { tipo: currentType, titulo: $('#f-titulo').value.trim(), descricao: $('#f-desc').value.trim() };
+        if (!base.titulo){ await alertModal('Validação', 'Informe um título.'); return; }
+        const data = {
+          modelo: $('#f-modelo').value.trim(),
+          ano: $('#f-ano').value ? Number($('#f-ano').value) : null,
+          cor: $('#f-cor').value.trim(),
+          capacidadeKg: $('#f-capacidade').value ? Number($('#f-capacidade').value) : null,
+          placa: $('#f-placa').value.trim().toUpperCase()
+        };
+        if (!data.placa){ await alertModal('Validação', 'Informe a placa.'); return; }
+
+        const payload = { ...base, ...data, id: crypto.randomUUID(), createdAtLocal: new Date().toISOString() };
+        showLoading('Salvando veículo...');
+        try{
+          await saveDoc(payload, tenant);
+          await alertModal('Sucesso', 'Cadastro salvo com sucesso!');
+          showLoading('Abrindo visualização...');
+          location.href = `view.html?id=${encodeURIComponent(payload.id)}&tenant=${encodeURIComponent(tenant)}`;
+        }catch(e){
+          await alertModal('Erro ao salvar', e?.message || 'Falha ao salvar.');
+        }finally{ hideLoading(); }
+        return;
+      }
+
+      // STORAGE
+      const nome = stor.nome.value.trim();
+      if (!nome){ await alertModal('Validação', 'Informe o nome do armazém.'); return; }
+      if (!geocoded.ok){ await alertModal('Validação', 'Valide o endereço do armazém (mesmo que aproximado) antes de salvar.'); return; }
+
+      const payload = {
+        id: crypto.randomUUID(),
+        tipo: 'storage',
+        titulo: nome,
+        unidadeTipo: stor.tipo.value,
+        capacidadeM3: stor.capacidade.value ? Number(stor.capacidade.value) : null,
+        descricao: stor.desc.value.trim(),
+        endereco: buildAddressString(),
+        enderecoRaw: {
+          cep: stor.cep.value.trim(), uf: stor.uf.value.trim().toUpperCase(),
+          cidade: stor.cidade.value.trim(), bairro: stor.bairro.value.trim(),
+          logradouro: stor.logradouro.value.trim(), numero: stor.numero.value.trim(),
+          complemento: stor.complemento.value.trim()
+        },
+        lat: geocoded.lat, lng: geocoded.lng,
+        geocodeDisplay: geocoded.addressStr,
+        createdAtLocal: new Date().toISOString()
+      };
+
+      showLoading('Salvando armazém...');
+      try{
+        await saveDoc(payload, tenant);
+        await alertModal('Sucesso', 'Armazém salvo e endereço validado!');
+        showLoading('Abrindo visualização...');
+        location.href = `view.html?id=${encodeURIComponent(payload.id)}&tenant=${encodeURIComponent(tenant)}`;
+      }catch(e){
+        await alertModal('Erro ao salvar', e?.message || 'Falha ao salvar.');
+      }finally{ hideLoading(); }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartLogi — Admin (Tenant: ADMIN)</title>
+  <style>
+    :root{ --accent:#ffe600; --border:#1b1b1b; }
+    html,body{height:100%}
+    body{ margin:0; font-family:Inter,Roboto,Segoe UI,Arial,sans-serif; background:linear-gradient(180deg,#0a0a0a 0%, #161616 100%); color:#f4f4f4; }
+    .wrap{display:grid; grid-template-rows:72px 1fr; height:100%;}
+    header{ height:72px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:var(--accent); color:#000; }
+
+    /* Título “Smart” light + “Logi” bold na mesma fonte (mantido) */
+    .brand-title{
+      display:inline-flex; align-items:baseline; gap:0;
+      margin:0; font-family:Inter,Roboto,Segoe UI,Arial,sans-serif;
+      font-size:20px; line-height:1; letter-spacing:.1px;
+    }
+    .brand-title .smart{ font-weight:300; }
+    .brand-title .logi{ font-weight:800; }
+
+    .btn{ background:#000; color:#ffe600; border:1px solid #000; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer; }
+    .bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    main{ display:grid; grid-template-columns: 420px 1fr; gap:16px; padding:16px; height:calc(100vh - 72px);}
+    .panel{ background:linear-gradient(180deg,#121212 0%,#101010 100%); border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; }
+    .panel h3{ margin:0 0 10px; color:var(--accent); font-size:16px;}
+    .kv{ display:grid; grid-template-columns:auto 1fr; gap:8px 10px; font-size:14px;}
+    .muted{ color:#bdbdbd; font-size:12px;}
+    .list{ display:grid; gap:12px; }
+    .tenant-card{ background:#0f0f0f; border:1px solid #202020; border-radius:12px; }
+    .tenant-head{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px;
+      border-bottom:1px solid #1d1d1d; background:linear-gradient(180deg,#131313 0%, #0f0f0f 100%);
+      border-top-left-radius:12px; border-top-right-radius:12px;
+    }
+    .tenant-name{ font-weight:800; }
+    .badge{ background:#ffe600; color:#000; border-radius:999px; padding:2px 8px; font-weight:700; font-size:12px;}
+    .tenant-actions-right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .btn-sm{ background:#ffe600; color:#000; border:none; padding:6px 8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:12px; }
+    .btn-sm.secondary{ background:transparent; color:#ffe600; border:1px solid #2a2a2a; }
+    .btn-sm.danger{ background:#ef4444; color:#fff; }
+    .tenant-body{ padding:12px; display:block; }
+    .tenant-body.collapsed{ display:none; }
+    .veh-grid{ display:grid; gap:8px; margin-top:10px; }
+    .veh-item{ display:grid; grid-template-columns: 1fr auto; gap:8px; padding:8px; border:1px solid #1f1f1f; border-radius:10px; background:#121212; }
+    .veh-title{ font-weight:700; color:#ffe600; }
+    .veh-meta{ font-size:12px; color:#cfcfcf; }
+    .logo-wrap{ display:grid; grid-template-columns: 1fr auto; gap:12px; margin-top:8px; align-items:center; }
+    .logo-img{
+      display:block; max-width:320px; max-height:120px;
+      border:1px solid #2a2a2a; background:#0c0c0c; border-radius:8px; padding:6px;
+      object-fit:contain;
+    }
+    .logo-url{ display:flex; gap:8px; align-items:center; margin-top:6px; }
+    .input{ padding:10px 12px; border-radius:10px; border:1px solid #2a2a2a; background:#0f0f0f; color:#fff; width:100%;}
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+    .label{ font-size:12px; color:#cfcfcf; margin-bottom:4px; display:block;}
+    .field{ margin-top:6px;}
+    .search{ display:flex; gap:8px; margin-top:8px; }
+    @media (max-width:1100px){ main{grid-template-columns:100%; grid-template-rows:auto 1fr;} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="brand-title"><span class="smart">Smart</span><span class="logi">Logi</span> — Admin</h1>
+      <div class="bar">
+        <span class="badge">Tenant: ADMIN</span>
+        <button id="btnExportAll" class="btn">Exportar tudo (JSON)</button>
+        <button id="btnReload" class="btn">Recarregar</button>
+        <button id="btnToApp" class="btn">Ir para App</button>
+        <button id="btnLogout" class="btn">Sair</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Painel esquerdo: sessão + criar tenant + busca -->
+      <section class="panel">
+        <h3>Sessão</h3>
+        <div class="kv">
+          <label>Usuário:</label> <span id="u-email">—</span>
+          <label>UID:</label> <span id="u-uid">—</span>
+          <label>Status:</label> <span id="u-role"><span class="badge">ADMIN</span></span>
+        </div>
+
+        <div style="margin-top:14px;">
+          <h3>Criar novo tenant</h3>
+          <div class="field">
+            <label class="label">ID do tenant (slug, sem espaços)</label>
+            <input id="tenantId" class="input" placeholder="ex.: acme, maybank, demo2"/>
+          </div>
+          <div class="field">
+            <label class="label">Nome exibido</label>
+            <input id="tenantName" class="input" placeholder="Ex.: ACME Corporation"/>
+          </div>
+          <div class="row field">
+            <div>
+              <label class="label">Owner (e-mail)</label>
+              <input id="tenantOwnerEmail" class="input" placeholder="owner@empresa.com"/>
+            </div>
+            <div>
+              <label class="label">Senha do owner</label>
+              <input id="tenantOwnerPass" type="password" class="input" placeholder="Senha do tenant owner"/>
+            </div>
+          </div>
+          <div class="bar" style="margin-top:8px;">
+            <button id="btnCreateTenant" class="btn">Criar Tenant + Usuário</button>
+          </div>
+          <div class="muted" style="margin-top:6px;">
+            Isso cria um documento em tenants_meta/{tenantId} e cadastra o usuário owner no Firebase Auth. Para produção, prefira criar usuários via Cloud Functions/Admin SDK.
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <h3>Buscar</h3>
+          <div class="search">
+            <input id="searchInput" class="input" placeholder="Buscar por tenant, placa ou título"/>
+          </div>
+          <div class="bar" style="margin-top:8px;">
+            <button id="btnSearch" class="btn">Buscar</button>
+            <button id="btnClear" class="btn">Limpar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Painel direito: tenants e veículos -->
+      <section class="panel">
+        <h3>Tenants e veículos</h3>
+        <div id="out" class="list">Carregando...</div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collectionGroup, collection, getDocs, deleteDoc, doc, setDoc, serverTimestamp, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Ajuste aqui se quiser mudar o e-mail do admin
+    const ADMIN_EMAIL = 'felippebraga1@gmail.com';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdGFvV7d3bWUs7_pWlnVVncnZELWG9aIM",
+      authDomain: "automech-001.firebaseapp.com",
+      databaseURL: "https://automech-001-default-rtdb.firebaseio.com",
+      projectId: "automech-001",
+      storageBucket: "automech-001.appspot.com",
+      messagingSenderId: "866346446102",
+      appId: "1:866346446102:web:6d2367ec228b406ccdf437",
+      measurementId: "G-X6XV23VDDJ"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const $ = s => document.querySelector(s);
+    const out = $('#out');
+
+    // Proteção de rota: só permite ADMIN_EMAIL. Caso contrário, volta para o login.
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { location.href = 'index.html'; return; }
+      if (user.email !== ADMIN_EMAIL) { location.href = 'index.html'; return; } // CORRIGIDO: não empurra para app.html
+      $('#u-email').textContent = user.email || '—';
+      $('#u-uid').textContent = user.uid || '—';
+      await loadAllTenants();
+    });
+
+    // Criação de tenant: meta + usuário owner
+    async function createTenantWithOwner(id, name, ownerEmail, ownerPass){
+      const tenantId = (id || '').trim();
+      if (!tenantId || !/^[a-z0-9-_.]+$/i.test(tenantId)) throw new Error('ID inválido. Use letras/números/.-_ (sem espaços).');
+      if (!ownerEmail || !ownerPass) throw new Error('Informe e-mail e senha do proprietário do tenant.');
+
+      const ref = doc(db, 'tenants_meta', tenantId);
+      const exists = await getDoc(ref);
+      if (exists.exists()) throw new Error('Este tenant já existe.');
+
+      const payload = {
+        id: tenantId,
+        name: (name || tenantId),
+        ownerEmail,
+        createdAt: serverTimestamp(),
+        status: 'active',
+        logoUrl: ''
+      };
+      await setDoc(ref, payload, { merge: true });
+
+      await createUserWithEmailAndPassword(auth, ownerEmail, ownerPass);
+      await signOut(auth);
+      alert('Tenant criado e usuário cadastrado. Faça login novamente como admin para continuar.');
+      location.href = 'index.html';
+    }
+
+    $('#btnCreateTenant').addEventListener('click', async ()=>{
+      const id = $('#tenantId').value;
+      const name = $('#tenantName').value;
+      const ownerEmail = $('#tenantOwnerEmail').value.trim();
+      const ownerPass  = $('#tenantOwnerPass').value;
+      try{
+        await createTenantWithOwner(id, name, ownerEmail, ownerPass);
+      }catch(e){
+        alert('Falha ao criar tenant: ' + (e?.message || e));
+      }
+    });
+
+    // Remover tenant: apaga vehicles + meta (não remove usuário Auth)
+    async function deleteTenant(tenantId){
+      const ok = confirm(`Tem certeza que deseja deletar o tenant "${tenantId}"?\nIsso removerá todos os veículos e o metadado do tenant.`);
+      if (!ok) return;
+
+      try{
+        const snap = await getDocs(collection(db, 'tenants', tenantId, 'vehicles'));
+        const batch = writeBatch(db);
+        snap.forEach(docSnap => batch.delete(docSnap.ref));
+        await batch.commit();
+
+        await deleteDoc(doc(db, 'tenants_meta', tenantId));
+
+        alert('Tenant deletado com sucesso.');
+        await loadAllTenants($('#searchInput').value.trim());
+      }catch(e){
+        alert('Erro ao deletar tenant: ' + (e?.message || e));
+      }
+    }
+
+    // Coleção vehicles (collectionGroup)
+    async function getAllVehicles() {
+      const cg = await getDocs(collectionGroup(db, 'vehicles'));
+      const list = [];
+      cg.forEach(snap => {
+        const data = snap.data();
+        const path = snap.ref.path; // tenants/{tenant}/vehicles/{id}
+        const parts = path.split('/');
+        const tenant = parts[1] || 'unknown';
+        list.push({ tenant, ...data });
+      });
+      return list;
+    }
+
+    // Catálogo de tenants (tenants_meta)
+    async function getTenantsCatalog(){
+      const snap = await getDocs(collection(db, 'tenants_meta'));
+      const list = [];
+      snap.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+      return list;
+    }
+
+    function groupByTenant(vehicles) {
+      const map = new Map();
+      for (const v of vehicles) {
+        const arr = map.get(v.tenant) || [];
+        arr.push(v);
+        map.set(v.tenant, arr);
+      }
+      return map;
+    }
+
+    function isValidImageUrl(url){
+      try {
+        const u = new URL(url);
+        if (!/^https?:$/i.test(u.protocol)) return false;
+        return /\.(png|jpe?g|webp|svg)(\?.*)?$/i.test(u.pathname);
+      } catch(e){ return false; }
+    }
+
+    async function saveLogoUrl(tenantId, url){
+      await setDoc(doc(db, 'tenants_meta', tenantId), { logoUrl: url || '' , logoUpdatedAt: serverTimestamp() }, { merge: true });
+    }
+
+    async function loadAllTenants(filterText='') {
+      out.innerHTML = 'Carregando...';
+      try{
+        const [vehAll, tenantsCatalog] = await Promise.all([getAllVehicles(), getTenantsCatalog()]);
+        const grouped = groupByTenant(vehAll);
+        tenantsCatalog.forEach(t => { if (!grouped.has(t.id)) grouped.set(t.id, []); });
+
+        const entries = [...grouped.entries()].sort((a,b)=> a[0].localeCompare(b[0]));
+        const ft = (filterText || '').toLowerCase();
+
+        const blocks = [];
+        for (const [tenant, vehicles] of entries){
+          const meta = tenantsCatalog.find(t=>t.id===tenant) || {};
+          const title = meta?.name || tenant;
+          const filteredVeh = ft
+            ? vehicles.filter(v => (tenant.toLowerCase().includes(ft) || v.placa?.toLowerCase().includes(ft) || v.titulo?.toLowerCase().includes(ft)))
+            : vehicles;
+
+          const logoPreview = meta.logoUrl
+            ? `<img src="${meta.logoUrl}" alt="Logo ${tenant}" class="logo-img" onerror="this.style.display='none';"/>`
+            : `<div class="muted">Sem logo</div>`;
+
+          const items = filteredVeh.map(v => {
+            const metaV = `Tipo: ${v.tipo || '—'} • Placa: ${v.placa || '—'} • Modelo: ${v.modelo || '—'} • Ano: ${v.ano || '—'}`;
+            return `
+              <div class="veh-item">
+                <div>
+                  <div class="veh-title">${v.titulo || '—'}</div>
+                  <div class="veh-meta">${metaV}</div>
+                </div>
+                <div class="actions-sm">
+                  <button class="btn-sm" onclick="location.href='view.html?id=${encodeURIComponent(v.id)}&tenant=${encodeURIComponent(tenant)}'">Ver</button>
+                  <button class="btn-sm secondary" onclick="location.href='app.html?tenant=${encodeURIComponent(tenant)}'">Abrir tenant</button>
+                  <button class="btn-sm" data-del="${tenant}::${v.id}">Excluir veículo</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // Sempre minimizado por padrão (collapsed)
+          blocks.push(`
+            <div class="tenant-card" data-tenant="${tenant}">
+              <div class="tenant-head">
+                <div style="flex:1; cursor:pointer;" data-toggle="${tenant}" title="Clique para expandir">
+                  <div class="tenant-name">${title} <span class="muted">(${tenant})</span></div>
+                  <div class="muted">${vehicles.length} veículo(s) • Status: ${meta?.status || '—'} ${meta?.ownerEmail ? '• Owner: '+meta.ownerEmail : ''}</div>
+                </div>
+                <div class="tenant-actions-right">
+                  <button class="btn-sm secondary" data-toggle-btn="${tenant}">Expandir</button>
+                  <a class="btn-sm" href="app.html?tenant=${encodeURIComponent(tenant)}">Abrir</a>
+                  <button class="btn-sm danger" data-del-tenant="${tenant}">Deletar tenant</button>
+                </div>
+              </div>
+
+              <div class="tenant-body collapsed" id="body-${tenant}">
+                <div class="logo-wrap">
+                  <div>${logoPreview}</div>
+                  <div>
+                    <div class="label">URL do logo (PNG/JPG/WEBP/SVG)</div>
+                    <div class="logo-url">
+                      <input class="input" id="logo-${tenant}" placeholder="https://.../logo.png" value="${meta.logoUrl || ''}"/>
+                      <button class="btn-sm" data-save-logo="${tenant}">Salvar URL</button>
+                    </div>
+                    <div class="tenant-actions-right" style="margin-top:6px;">
+                      <button class="btn-sm secondary" data-preview-logo="${tenant}">Pré-visualizar</button>
+                      ${meta.logoUrl ? `<button class="btn-sm danger" data-remove-logo="${tenant}">Remover logo</button>` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                ${items ? `<div class="veh-grid">${items}</div>` : '<div class="muted" style="margin-top:8px;">Sem veículos</div>'}
+              </div>
+            </div>
+          `);
+        }
+
+        out.innerHTML = blocks.join('') || '<div class="muted">Nenhum registro encontrado.</div>';
+
+        // Toggle collapse por clique no título e no botão
+        out.querySelectorAll('[data-toggle]').forEach(el=>{
+          el.addEventListener('click', ()=>{
+            const tenant = el.getAttribute('data-toggle');
+            toggleTenant(tenant);
+          });
+        });
+        out.querySelectorAll('[data-toggle-btn]').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const tenant = btn.getAttribute('data-toggle-btn');
+            toggleTenant(tenant);
+          });
+        });
+
+        function toggleTenant(tenantId){
+          const body = document.getElementById(`body-${tenantId}`);
+          const isCollapsed = body.classList.contains('collapsed');
+          if (isCollapsed) {
+            body.classList.remove('collapsed');
+          } else {
+            body.classList.add('collapsed');
+          }
+          const btn = out.querySelector(`[data-toggle-btn="${tenantId}"]`);
+          if (btn) btn.textContent = isCollapsed ? 'Minimizar' : 'Expandir';
+          const headerToggle = out.querySelector(`[data-toggle="${tenantId}"]`);
+          if (headerToggle) headerToggle.setAttribute('title', `Clique para ${(isCollapsed ? 'minimizar' : 'expandir')}`);
+        }
+
+        // Bind exclusão de veículos
+        out.querySelectorAll('[data-del]').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const [tenant,id] = btn.getAttribute('data-del').split('::');
+            const ok = confirm(`Excluir o veículo ${id} do tenant ${tenant}?`);
+            if (!ok) return;
+            try{
+              await deleteDoc(doc(db, 'tenants', tenant, 'vehicles', id));
+              alert('Veículo excluído');
+              await loadAllTenants($('#searchInput').value.trim());
+            }catch(e){
+              alert('Erro ao excluir veículo: ' + (e?.message || e));
+            }
+          });
+        });
+
+        // Bind exclusão de tenant
+        out.querySelectorAll('[data-del-tenant]').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const tenant = btn.getAttribute('data-del-tenant');
+            await deleteTenant(tenant);
+          });
+        });
+
+        // Bind salvar URL logo
+        out.querySelectorAll('[data-save-logo]').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const tenant = btn.getAttribute('data-save-logo');
+            const input = document.getElementById(`logo-${tenant}`);
+            const url = (input.value || '').trim();
+            if (!url){
+              await saveLogoUrl(tenant, '');
+              alert('Logo removido.');
+              await loadAllTenants($('#searchInput').value.trim());
+              return;
+            }
+            if (!isValidImageUrl(url)){
+              alert('URL inválida. Use http(s) e termine com .png, .jpg, .jpeg, .webp ou .svg');
+              return;
+            }
+            try{
+              await saveLogoUrl(tenant, url);
+              alert('Logo salvo com sucesso.');
+              await loadAllTenants($('#searchInput').value.trim());
+            }catch(e){
+              alert('Falha ao salvar logo: ' + (e?.message || e));
+            }
+          });
+        });
+
+        // Bind preview logo
+        out.querySelectorAll('[data-preview-logo]').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const tenant = btn.getAttribute('data-preview-logo');
+            const input = document.getElementById(`logo-${tenant}`);
+            const url = (input.value || '').trim();
+            if (!url){ alert('Informe uma URL para pré-visualizar.'); return; }
+            window.open(url, '_blank', 'noopener,noreferrer');
+          });
+        });
+
+        // Bind remover logo
+        out.querySelectorAll('[data-remove-logo]').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const tenant = btn.getAttribute('data-remove-logo');
+            const ok = confirm('Remover logo deste tenant?');
+            if (!ok) return;
+            try{
+              await saveLogoUrl(tenant, '');
+              alert('Logo removido.');
+              await loadAllTenants($('#searchInput').value.trim());
+            }catch(e){
+              alert('Falha ao remover logo: ' + (e?.message || e));
+            }
+          });
+        });
+
+      }catch(e){
+        out.innerHTML = `<div class="muted">Erro ao carregar: ${e?.message || e}</div>`;
+      }
+    }
+
+    // Ações do topo
+    $('#btnReload').addEventListener('click', ()=> loadAllTenants($('#searchInput').value.trim()));
+    $('#btnToApp').addEventListener('click', ()=> location.href='app.html?tenant=demo');
+
+    // Logout: apenas signOut; onAuthStateChanged fará redirect para index
+    document.getElementById('btnLogout').addEventListener('click', async ()=>{
+      try { await signOut(auth); }
+      catch (e) { console.warn('Erro ao sair:', e?.message || e); }
+    });
+
+    // Busca
+    $('#btnSearch').addEventListener('click', ()=> loadAllTenants($('#searchInput').value.trim()));
+    $('#btnClear').addEventListener('click', ()=>{ $('#searchInput').value=''; loadAllTenants(''); });
+
+    // Exportar todos veículos
+    $('#btnExportAll').addEventListener('click', async ()=>{
+      try{
+        const cg = await getDocs(collectionGroup(db, 'vehicles'));
+        const data = [];
+        cg.forEach(s=> data.push({ path: s.ref.path, ...s.data() }));
+        const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob); const a=document.createElement('a');
+        a.href=url; a.download='backup-all-tenants-vehicles.json'; a.click(); URL.revokeObjectURL(url);
+      }catch(e){
+        alert('Falha na exportação: ' + (e?.message || e));
+      }
+    });
+
+    // Boot
+    loadAllTenants();
+  </script>
+</body>
+</html>
