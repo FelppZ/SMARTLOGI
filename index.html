@@ -249,6 +249,11 @@
             <button class="menu-btn active" onclick="switchSection('sec-pdv', this)">🛒 Frente de Caixa</button>
             <button class="menu-btn" onclick="switchSection('sec-produtos', this)">📦 Produtos (Firebase)</button>
             <button class="menu-btn" onclick="switchSection('sec-layout', this)">🗺️ Layout do Salão</button>
+            
+            <!-- NOVO BOTÃO PARA EXIBIR TELA DO CLIENTE -->
+            <button class="menu-btn" onclick="abrirTelaCliente()" style="background: #1e293b; color: #00bdae; margin-top: 20px;">
+                🖥️ Abrir Tela do Cliente
+            </button>
         </nav>
         <div style="margin-top: auto; padding-top: 15px;">
             <input type="text" id="logo-url-input" placeholder="URL da Logomarca" style="width: 100%; font-size: 0.8rem; padding: 8px;" onchange="alterarLogo(this.value)">
@@ -273,10 +278,15 @@
                         <tbody></tbody>
                     </table>
                 </div>
-                <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+                <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 280px;">
                     <h3>Fechamento</h3>
-                    <h1 id="pdv-total-display" style="font-size: 2.5rem; color: var(--accent-success); margin: 20px 0;">R$ 0,00</h1>
-                    <button class="btn-success" style="width: 100%; padding: 16px; font-size: 1.1rem;" onclick="dispararPopUpPix()">PAGAR COM PIX (POP-UP)</button>
+                    <h1 id="pdv-total-display" style="font-size: 2.5rem; color: var(--accent-success); margin: 15px 0;">R$ 0,00</h1>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn-success" style="width: 100%; padding: 14px; font-size: 1rem;" onclick="dispararPopUpPix()">ENVIAR PIX PARA O CLIENTE</button>
+                        <button style="width: 100%; padding: 12px; font-size: 0.95rem; background: #10b981;" onclick="confirmarPagamentoDoPopUp()">CONFIRMAR PAGAMENTO E LIMPAR</button>
+                        <button class="btn-danger" style="width: 100%; padding: 10px; font-size: 0.9rem;" onclick="cancelarExibicaoCliente()">CANCELAR PIX NA TELA</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -392,9 +402,6 @@
             });
         };
 
-        // ==========================================
-        // OPERAÇÕES DO PDV
-        // ==========================================
         function adicionarItemPDV() {
             const idProd = document.getElementById('pdv-select-produto').value;
             const qtd = parseInt(document.getElementById('pdv-qtd-produto').value) || 1;
@@ -424,9 +431,6 @@
             document.getElementById('pdv-total-display').innerText = `R$ ${totalVendaAtual.toFixed(2).replace('.', ',')}`;
         }
 
-        // ==========================================
-        // LAYOUT DE POSIÇÕES
-        // ==========================================
         function renderizarLayoutSalao() {
             const canvas = document.getElementById('map-canvas');
             canvas.innerHTML = '';
@@ -495,9 +499,6 @@
 
         function fecharTipbox() { document.getElementById('map-tipbox').style.display = 'none'; }
 
-        // ==========================================
-        // GESTÃO DA COMANDA
-        // ==========================================
         function abrirModalComanda(numMesa) {
             fecharTipbox();
             mesaSelecionadaModal = numMesa;
@@ -582,43 +583,48 @@
         });
 
         // ==========================================
-        // OPERAÇÕES CORRIGIDAS DO POP-UP INDEPENDENTE
+        // COMUNICAÇÃO DE TELA DUPLA (REAL-TIME)
         // ==========================================
+        
+        // Abre a janela do cliente
+        function abrirTelaCliente() {
+            const largura = 1280; const altura = 720;
+            const telaCliente = window.open("cliente.html", "AutoMechTelaCliente", `width=${largura},height=${altura},resizable=yes,scrollbars=no`);
+            if(!telaCliente) {
+                alert("O bloqueador de pop-ups barrou a abertura automática. Por favor, autorize pop-ups neste navegador.");
+            }
+        }
+
+        // Dispara e renderiza o Pix na tela do cliente
         function dispararPopUpPix() {
-    if(carrinhoPDV.length === 0 || totalVendaAtual === 0) return alert("Nenhum item no checkout para faturar.");
-    
-    // 1. Monta o pacote de dados
-    const dadosPagamento = {
-        status: "PENDENTE",
-        totalVenda: totalVendaAtual,
-        itens: carrinhoPDV,
-        timestamp: Date.now() // Garante que o navegador perceba a mudança
-    };
+            if(carrinhoPDV.length === 0 || totalVendaAtual === 0) return alert("Nenhum item no checkout para faturar.");
+            
+            const dadosPagamento = {
+                status: "PENDENTE",
+                totalVenda: totalVendaAtual,
+                itens: carrinhoPDV,
+                timestamp: Date.now()
+            };
 
-    // 2. Dispara o gatilho para a tela do cliente ler
-    localStorage.setItem("autoMech_compartilhado", JSON.stringify(dadosPagamento));
-    
-    alert("Dados enviados para a tela do cliente!");
-}
+            localStorage.setItem("autoMech_compartilhado", JSON.stringify(dadosPagamento));
+        }
 
-// Chame esta função quando o operador clicar no botão manual de "Confirmar e Limpar Venda" no painel dele
-window.confirmarPagamentoDoPopUp = function() {
-    // Avisa a tela do cliente para voltar ao estado de espera
-    localStorage.setItem("autoMech_compartilhado", JSON.stringify({ status: "FINALIZADO" }));
-    
-    alert("Venda liquidada com sucesso!");
-    carrinhoPDV = []; 
-    totalVendaAtual = 0; 
-    renderizarPDV(); 
-};
-
-        // Função de retorno de sucesso que a tela pix.html executa ao ser liquidada
+        // Confirma liquidação e limpa ambas as telas
         window.confirmarPagamentoDoPopUp = function() {
+            if(carrinhoPDV.length === 0) return alert("Não há nenhuma venda ativa para ser liquidada.");
+            
+            localStorage.setItem("autoMech_compartilhado", JSON.stringify({ status: "FINALIZADO" }));
+            
             alert("Venda liquidada via Pix com sucesso!");
             carrinhoPDV = []; 
             totalVendaAtual = 0; 
             renderizarPDV(); 
         };
+
+        // Cancela a exibição atual no cliente e joga em standby
+        function cancelarExibicaoCliente() {
+            localStorage.setItem("autoMech_compartilhado", JSON.stringify({ status: "FINALIZADO" }));
+        }
     </script>
 </body>
 </html>
