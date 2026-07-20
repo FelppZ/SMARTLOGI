@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoMech - Tela do Cliente</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        
+        /* Estado Inicial (Espera) */
+        .tela-espera { text-align: center; display: flex; flex-direction: column; gap: 20px; }
+        .logo-espera { width: 160px; height: 160px; border-radius: 50%; border: 4px solid #00bdae; margin: 0 auto; animation: pulse 2s infinite; }
+        
+        /* Tela de Checkout Ativo */
+        .tela-pagamento { display: none; width: 100%; height: 100vh; grid-template-columns: 1fr 1fr; padding: 40px; gap: 40px; }
+        .col-esquerda { background: #1e293b; border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #334155; }
+        .col-direita { background: #ffffff; border-radius: 24px; color: #0f172a; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        
+        .lista-itens { flex: 1; margin: 25px 0; overflow-y: auto; padding-right: 10px; }
+        .item-linha { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; font-size: 1.2rem; }
+        
+        .qr-border { background: #ffffff; padding: 20px; border-radius: 24px; border: 2px solid #e2e8f0; display: inline-block; margin-bottom: 20px; }
+        
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
+    </style>
+</head>
+<body>
+
+    <!-- 1. TELA DE ESPERA / BEM-VINDO -->
+    <div id="view-espera" class="tela-espera">
+        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300" class="logo-espera">
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: 1px;">Bem-vindo à <span style="color:#00bdae;">AutoMech</span></h1>
+        <p style="color: #94a3b8; font-size: 1.3rem;">Aguardando lançamento de itens no caixa...</p>
+    </div>
+
+    <!-- 2. TELA DE PAGAMENTO (MONITORED) -->
+    <div id="view-pagamento" class="tela-pagamento">
+        
+        <!-- Extrato da conta -->
+        <div class="col-esquerda">
+            <div>
+                <h2 style="color: #00bdae; font-size: 1.8rem; margin-bottom: 5px;">Seu Pedido</h2>
+                <p style="color: #94a3b8;">Confira os itens abaixo</p>
+            </div>
+            
+            <div class="lista-itens" id="lista-produtos-cliente"></div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; border-top: 2px dashed #334155; padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #94a3b8;"><span>Subtotal:</span><span id="subtotal">R$ 0,00</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #818cf8;"><span>Serviço (10%):</span><span id="taxa">R$ 0,00</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 2rem; font-weight: bold; color: #10b981; margin-top: 5px;">
+                    <span>Total Geral:</span><span id="total-geral">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code e Instrução -->
+        <div class="col-direita">
+            <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 10px; text-align: center;">Pague com PIX</h2>
+            <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 30px; text-align: center;">Abra o app do seu banco e escaneie o código</p>
+            
+            <div class="qr-border">
+                <div id="qrcode"></div>
+            </div>
+            
+            <p style="font-size: 1.1rem; font-weight: bold; color: #0f172a; margin-top: 10px; background: #f1f5f9; padding: 10px 20px; border-radius: 12px;">
+                Chave CNPJ: 197.924.457-06
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // String PIX Padrão
+        function gerarStringPix(chave, valor, beneficiario, city) {
+            const cl = chave.replace(/\D/g, '');
+            const vf = valor.toFixed(2);
+            const f = (id, val) => id + String(val.length).padStart(2, '0') + val;
+            const info = f('00', 'br.gov.bcb.pix') + f('01', cl);
+            let payload = f('00', '01') + f('26', info) + f('52', '0000') + f('53', '986') + f('54', vf) + f('58', 'BR') + f('59', beneficiario.substring(0, 25)) + f('60', city.substring(0, 15)) + f('62', f('05', '***')) + '6304';
+            let crc = 0xFFFF;
+            for (let i = 0; i < payload.length; i++) {
+                crc ^= payload.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) { if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ 0x1021; else crc <<= 1; }
+            }
+            return payload + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        let qrInstancia = null;
+
+        // Escuta as alterações vindas do Monitor do Operador
+        window.addEventListener('storage', function(event) {
+            if (event.key === "autoMech_compartilhado") {
+                const dados = JSON.parse(event.newValue);
+
+                if (!dados || dados.status === "FINALIZADO") {
+                    // Volta para a tela de repouso
+                    document.getElementById('view-espera').style.display = 'flex';
+                    document.getElementById('view-pagamento').style.display = 'none';
+                    return;
+                }
+
+                if (dados.status === "PENDENTE") {
+                    const totalVenda = dados.totalVenda;
+                    const taxaServico = totalVenda * 0.10;
+                    const valorFinalComTaxa = totalVenda + taxaServico;
+
+                    // Atualiza os valores na tela
+                    document.getElementById('subtotal').innerText = `R$ ${totalVenda.toFixed(2).replace('.', ',')}`;
+                    document.getElementById('taxa').innerText = `R$ ${taxaServico.toFixed(2).replace('.', ',')}`;
+                    document.getElementById('total-geral').innerText = `R$ ${valorFinalComTaxa.toFixed(2).replace('.', ',')}`;
+
+                    // Injeta a lista de itens comprados
+                    const container = document.getElementById('lista-produtos-cliente');
+                    container.innerHTML = '';
+                    dados.itens.forEach(item => {
+                        container.innerHTML += `
+                            <div class="item-linha">
+                                <span>${item.qtd}x ${item.nome}</span>
+                                <span>R$ ${(item.preco * item.qtd).toFixed(2).replace('.', ',')}</span>
+                            </div>`;
+                    });
+
+                    // Limpa o QR code antigo se houver
+                    document.getElementById('qrcode').innerHTML = '';
+
+                    // Gera a nova string de pagamento e renderiza o QR Code
+                    const payload = gerarStringPix("19792445706", valorFinalComTaxa, "AUTOMECH POS", "SAO PAULO");
+                    qrInstancia = new QRCode(document.getElementById('qrcode'), {
+                        text: payload,
+                        width: 280,   // Tamanho maior para exibição em monitores
+                        height: 280
+                    });
+
+                    // Alterna a interface para o modo de pagamento
+                    document.getElementById('view-espera').style.display = 'none';
+                    document.getElementById('view-pagamento').style.display = 'grid';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
