@@ -1,289 +1,624 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SmartLogi — Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoMech - Gestão & PDV</title>
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --panel-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --accent-primary: #4f46e5;
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.03);
+        }
 
-  <style>
-    :root{
-      --may-yellow:#ffe600; --may-black:#000; --may-white:#fff;
-      --gray-200:#9a9a9a; --border:#1b1b1b;
-      --shadow-2:0 10px 24px rgba(0,0,0,.25);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Inter,Roboto,"Segoe UI",Helvetica,Arial,sans-serif;
-      background:
-        radial-gradient(1200px 800px at 10% 10%, rgba(255,230,0,.08), transparent 60%),
-        radial-gradient(1000px 700px at 90% 80%, rgba(255,230,0,.06), transparent 60%),
-        linear-gradient(180deg,#0a0a0a 0%, #161616 100%);
-      color:#f4f4f4; overflow:hidden;
-    }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-    .login-split{position:fixed; inset:0; display:grid; grid-template-columns:1fr 1fr; height:100%;}
-    .left{display:grid; place-items:center; padding:32px; background:linear-gradient(180deg,#0d0d0d 0%, #121212 100%); border-right:1px solid #0f0f0f;}
-    .card{
-      width:min(92vw,480px);
-      background:linear-gradient(180deg, rgba(18,18,18,.96) 0%, rgba(12,12,12,.96) 100%);
-      border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-2); padding:24px;
-    }
-    .brand{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;}
-    .title{margin:0; color:var(--may-yellow); font-family:"Bahnschrift SemiBold","Bahnschrift","Segoe UI",Arial,sans-serif; font-weight:600; letter-spacing:.3px; font-size:22px;}
-    .sub{margin:0; color:var(--gray-200); font-size:12px;}
+        body {
+            background: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
 
-    .form{display:grid; gap:12px; margin-top:12px;}
-    .label{font-size:12px; color:var(--gray-200); margin-bottom:4px; display:block;}
-    .input,.select{
-      width:100%; padding:12px; border-radius:10px; border:1px solid #262626; background:#0f0f0f; color:#f2f2f2; outline:none;
-    }
-    .input:focus,.select:focus{border-color:var(--may-yellow); box-shadow:0 0 0 3px rgba(255,230,0,.18);}
-    .actions{display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;}
-    .btn{
-      background:var(--may-yellow); color:var(--may-black); border:none; padding:12px 14px; border-radius:10px; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.15);
-      transition:transform .08s ease;
-    }
-    .btn:hover{transform:translateY(-1px)}
-    .btn.secondary{background:transparent; color:#fff; border:1px solid #2a2a2a;}
-    .error{color:#ff7a7a; font-size:12px; min-height:16px;}
-    .foot{margin-top:6px; font-size:12px; color:#bdbdbd;}
+        /* MENU LATERAL */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            z-index: 10;
+            box-shadow: var(--shadow-sm);
+        }
 
-    .right{position:relative; overflow:hidden; background:#0b0b0b;}
-    .bg{
-      position:absolute; inset:0;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)),
-        url('https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png') center/cover no-repeat;
-    }
+        .brand-area {
+            text-align: center;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
 
-    svg.lines{
-      position:absolute; inset:0; width:100%; height:100%;
-      filter: drop-shadow(0 0 6px rgba(255,230,0,.25));
-      pointer-events:none;
-    }
-    .conn{ stroke:#ffe600; stroke-width:2; fill:none; opacity:.85 }
-    .hub{ fill:#ffe600; opacity:.95 }
-    .hub-shadow{ fill:#ffe600; opacity:.18; filter:blur(6px) }
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border: 2px solid var(--accent-primary);
+            background: #f1f5f9;
+        }
 
-    .glass{
-      position:absolute; inset:0; display:grid; place-items:end center; padding:28px; pointer-events:none;
-    }
-    .glass-card{
-      width:min(92%,720px);
-      border-radius:20px; border:1px solid rgba(255,255,255,.14);
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-      backdrop-filter:blur(16px) saturate(120%); -webkit-backdrop-filter:blur(16px) saturate(120%);
-      box-shadow:0 10px 34px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
-      padding:16px 20px; color:#f3f3f3; margin-bottom:24px;
-    }
-    .glass-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px;}
-    .glass-title{margin:0; font-weight:800; letter-spacing:.4px; color:#fff; font-size:18px; line-height:1.2;}
-    .glass-sub{margin:0; color:#ddd; font-size:12px; transition:opacity .4s ease;}
-    .glass-sub.hide{opacity:0}
+        .menu-btn {
+            background: transparent;
+            color: var(--text-muted);
+            text-align: left;
+            padding: 14px 18px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 500;
+        }
 
-    @media (max-width:1024px){
-      .login-split{grid-template-columns:1fr}
-      .right{display:none}
-    }
-  </style>
+        .menu-btn:hover, .menu-btn.active {
+            background: #f1f5f9;
+            color: var(--accent-primary);
+        }
+
+        /* ÁREA DE CONTEÚDO DINÂMICO */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .app-section { display: none; animation: fadeIn 0.2s ease-out forwards; }
+        .app-section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+        }
+
+        /* FORMULÁRIOS E TABELAS */
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        input, select {
+            background: #ffffff; border: 1px solid var(--border-color);
+            padding: 12px; border-radius: 8px; color: var(--text-main); font-size: 0.95rem; outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--accent-primary); }
+        
+        button {
+            background: var(--accent-primary); color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        button:hover { filter: brightness(1.05); box-shadow: var(--shadow-sm); }
+        .btn-success { background: var(--accent-success); }
+        .btn-danger { background: var(--accent-danger); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { color: var(--text-muted); padding: 12px; border-bottom: 2px solid var(--border-color); font-size: 0.85rem; text-transform: uppercase; text-align: left; }
+        td { padding: 14px 12px; border-bottom: 1px solid var(--border-color); }
+
+        /* MAPA DE MESAS */
+        .map-canvas {
+            width: 100%;
+            height: 500px;
+            background: #f1f5f9;
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .table-node {
+            position: absolute;
+            width: 75px;
+            height: 75px;
+            background: #ffffff;
+            border: 2px solid var(--accent-success);
+            color: var(--accent-success);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: var(--shadow-md);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .table-node:hover { background: #f0fdf4; }
+        .table-node.occupied { border-color: var(--accent-danger); background: #ffffff; color: var(--accent-danger); }
+        .table-node.occupied:hover { background: #fef2f2; }
+
+        /* POPOVER CONTEXTUAL */
+        .tipbox {
+            position: absolute;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--shadow-lg);
+            z-index: 50;
+            display: none;
+            width: 220px;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .tipbox h4 { font-size: 0.95rem; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 3px; }
+
+        /* MODAL INTERNO DA COMANDA */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(4px); z-index: 80; justify-content: center; align-items: center;
+        }
+        .modal-box { background: white; border-radius: 16px; padding: 30px; max-width: 540px; width: 90%; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); }
+    </style>
+
+    <!-- SDK do Firebase v10 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdGFvV7d3bWUs7_pWlnVVncnZELWG9aIM",
+            authDomain: "automech-001.firebaseapp.com",
+            databaseURL: "https://automech-001-default-rtdb.firebaseio.com",
+            projectId: "automech-001",
+            storageBucket: "automech-001.firebasestorage.app",
+            messagingSenderId: "866346446102",
+            appId: "1:866346446102:web:6d2367ec228b406ccdf437",
+            measurementId: "G-X6XV23VDDJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const COLECAO_NOME = "automech_produtos";
+
+        onSnapshot(collection(db, COLECAO_NOME), (snapshot) => {
+            const listaProdutos = [];
+            snapshot.forEach(doc => { 
+                listaProdutos.push({ id: doc.id, ...doc.data() }); 
+            });
+            window.atualizarListaLocalProdutos(listaProdutos);
+        });
+
+        window.salvarProdutoFirebase = async function() {
+            const nome = document.getElementById('prod-nome').value.trim();
+            const preco = parseFloat(document.getElementById('prod-preco').value);
+            
+            if(!nome || isNaN(preco)) {
+                return alert("Por favor, preencha o nome e o preço corretamente.");
+            }
+
+            try {
+                await addDoc(collection(db, COLECAO_NOME), { nome, preco });
+                document.getElementById('prod-nome').value = '';
+                document.getElementById('prod-preco').value = '';
+            } catch (error) {
+                console.error("Erro ao gravar:", error);
+            }
+        };
+
+        window.deletarProduto = async function(id) {
+            try {
+                await deleteDoc(doc(db, COLECAO_NOME, id));
+            } catch (error) {
+                console.error(error);
+            }
+        };
+    </script>
 </head>
 <body>
-  <section class="login-split">
-    <div class="left">
-      <div class="card">
-        <div class="brand">
-          <h1 class="title">SmartLogi</h1>
-          <p class="sub">Acesso multi-tenant</p>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand-area">
+            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150" alt="Logo" class="brand-logo" id="app-logo">
+            <h3 style="font-size: 1.1rem; font-weight: 700;">AutoMech // POS</h3>
         </div>
-
-        <form id="loginForm" class="form">
-          <div>
-            <label class="label" for="tenant">Tenant</label>
-            <input id="tenant" class="input" placeholder="ex.: demo, ADMIN, acme" required />
-          </div>
-          <div>
-            <label class="label" for="email">E-mail</label>
-            <input id="email" type="email" class="input" placeholder="usuario@empresa.com" required />
-          </div>
-          <div>
-            <label class="label" for="password">Senha</label>
-            <input id="password" type="password" class="input" placeholder="Sua senha" required />
-          </div>
-
-          <div class="actions">
-            <button type="submit" class="btn">Entrar</button>
-            <a id="btnDemo" class="btn secondary" href="#">Entrar no Demo</a>
-          </div>
-
-          <div id="loginError" class="error"></div>
-          <div class="foot">SmartLogi v1.0</div>
-        </form>
-      </div>
+        <nav>
+            <button class="menu-btn active" onclick="switchSection('sec-pdv', this)">🛒 Frente de Caixa</button>
+            <button class="menu-btn" onclick="switchSection('sec-produtos', this)">📦 Produtos (Firebase)</button>
+            <button class="menu-btn" onclick="switchSection('sec-layout', this)">🗺️ Layout do Salão</button>
+        </nav>
+        <div style="margin-top: auto; padding-top: 15px;">
+            <input type="text" id="logo-url-input" placeholder="URL da Logomarca" style="width: 100%; font-size: 0.8rem; padding: 8px;" onchange="alterarLogo(this.value)">
+        </div>
     </div>
 
-    <div class="right">
-      <div class="bg"></div>
-      <svg id="svgLines" class="lines" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
-      <div class="glass">
-        <div class="glass-card">
-          <div class="glass-head">
-            <h3 class="glass-title">
-              Monitoramento Logístico
-              <br/>
-              Inteligente e Escalável
-            </h3>
-            <p id="glassMsg" class="glass-sub">Rotas totalmente mapeadas com acuracidade única</p>
-          </div>
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-content">
+        
+        <!-- SEÇÃO 1: PDV / CAIXA -->
+        <div id="sec-pdv" class="app-section active">
+            <div style="display: grid; grid-template-columns: 1fr 380px; gap: 20px;">
+                <div class="glass-panel">
+                    <h2 style="margin-bottom: 15px;">Venda Direta / Balcão</h2>
+                    <div class="grid-inputs" style="grid-template-columns: 1fr 100px auto;">
+                        <select id="pdv-select-produto"></select>
+                        <input type="number" id="pdv-qtd-produto" value="1" min="1" placeholder="Qtd">
+                        <button onclick="adicionarItemPDV()">Adicionar</button>
+                    </div>
+                    <table id="table-pdv-itens">
+                        <thead><tr><th>Item</th><th>Qtd</th><th>Preço Unit.</th><th>Total</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+                    <h3>Fechamento</h3>
+                    <h1 id="pdv-total-display" style="font-size: 2.5rem; color: var(--accent-success); margin: 20px 0;">R$ 0,00</h1>
+                    <button class="btn-success" style="width: 100%; padding: 16px; font-size: 1.1rem;" onclick="dispararPopUpPix()">PAGAR COM PIX (POP-UP)</button>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- SEÇÃO 2: GERENCIADOR DE PRODUTOS -->
+        <div id="sec-produtos" class="app-section">
+            <div class="glass-panel">
+                <h2 style="margin-bottom: 15px;">Cadastrar Produto no Cloud Firebase</h2>
+                <div class="grid-inputs">
+                    <input type="text" id="prod-nome" placeholder="Nome do Item">
+                    <input type="number" id="prod-preco" step="0.01" placeholder="Preço (Ex: 29.90)">
+                    <button class="btn-success" onclick="salvarProdutoFirebase()">Salvar na Nuvem</button>
+                </div>
+            </div>
+            <div class="glass-panel">
+                <h3>Produtos Sincronizados</h3>
+                <table id="table-firebase-produtos">
+                    <thead><tr><th>Nome</th><th>Preço</th><th>Ação</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 3: LAYOUT DE POSIÇÕES -->
+        <div id="sec-layout" class="app-section">
+            <div class="glass-panel" style="position: relative;">
+                <h2 style="margin-bottom: 10px;">Mapeamento Geográfico do Salão</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Clique em uma mesa para abrir ou editar comandas. Arraste para reposicionar.</p>
+                
+                <div class="map-canvas" id="map-canvas" ondragover="allowDrop(event)" ondrop="dropMesa(event)"></div>
+                <div class="tipbox" id="map-tipbox"></div>
+            </div>
+        </div>
+
     </div>
-  </section>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    <!-- MODAL INTERNO DA COMANDA -->
+    <div class="modal-overlay" id="comanda-modal">
+        <div class="modal-box">
+            <h3 id="modal-titulo-mesa" style="margin-bottom: 15px;">Editar Comanda - Mesa</h3>
+            
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: #f8fafc;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">Adicionar Item</h4>
+                <div style="display: flex; gap: 10px;">
+                    <select id="modal-select-produto" style="flex: 1; padding: 8px; font-size: 0.9rem;"></select>
+                    <input type="number" id="modal-qtd-produto" value="1" min="1" style="width: 80px; padding: 8px; font-size: 0.9rem;">
+                    <button style="padding: 8px 15px; font-size: 0.9rem;" onclick="adicionarItemMesaModal()">Lançar</button>
+                </div>
+            </div>
 
-    // Ajuste aqui o identificador do painel admin
-    const ADMIN_TENANT = 'ADMIN';
+            <h4 style="font-size: 0.95rem; margin-bottom: 8px;">Consumo Atual:</h4>
+            <div id="modal-lista-itens" style="max-height: 150px; overflow-y: auto; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem;"></div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBdGFvV7d3bWUs7_pWlnVVncnZELWG9aIM",
-      authDomain: "automech-001.firebaseapp.com",
-      databaseURL: "https://automech-001-default-rtdb.firebaseio.com",
-      projectId: "automech-001",
-      storageBucket: "automech-001.firebasestorage.app",
-      messagingSenderId: "866346446102",
-      appId: "1:866346446102:web:6d2367ec228b406ccdf437",
-      measurementId: "G-X6XV23VDDJ"
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span>Total Acumulado (Sem Taxas):</span>
+                <strong id="modal-total-comanda" style="font-size: 1.3rem; color: var(--accent-success);">R$ 0,00</strong>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-success" style="flex: 1;" id="modal-btn-fechar-conta">Enviar ao Caixa e Fechar</button>
+                <button style="background: #e2e8f0; color: var(--text-main);" onclick="fecharModalComanda()">Voltar ao Mapa</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let produtos = [];
+        let comandas = {}; 
+        let carrinhoPDV = [];
+        let totalVendaAtual = 0;
+        let estaArrastando = false; 
+        let mesaSelecionadaModal = null;
+
+        let posicoesMesas = {
+            "1": { x: 50, y: 60 },
+            "2": { x: 180, y: 60 },
+            "3": { x: 310, y: 60 },
+            "4": { x: 50, y: 180 },
+            "5": { x: 180, y: 180 }
+        };
+
+        function switchSection(id, btn) {
+            fecharTipbox();
+            fecharModalComanda();
+            document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            if(id === 'sec-layout') renderizarLayoutSalao();
+        }
+
+        function alterarLogo(url) {
+            if(url) document.getElementById('app-logo').src = url;
+        }
+
+        window.atualizarListaLocalProdutos = function(dadosNovos) {
+            produtos = dadosNovos;
+            
+            const tbody = document.querySelector('#table-firebase-produtos tbody');
+            tbody.innerHTML = '';
+            produtos.forEach(p => {
+                tbody.innerHTML += `<tr><td>${p.nome}</td><td>R$ ${p.preco.toFixed(2)}</td><td><button class="btn-danger" onclick="deletarProduto('${p.id}')">Excluir</button></td></tr>`;
+            });
+
+            const selectPDV = document.getElementById('pdv-select-produto');
+            const selectModal = document.getElementById('modal-select-produto');
+            selectPDV.innerHTML = ''; selectModal.innerHTML = '';
+            
+            produtos.forEach(p => {
+                const opt = `<option value="${p.id}">${p.nome} - R$ ${p.preco.toFixed(2)}</option>`;
+                selectPDV.innerHTML += opt;
+                selectModal.innerHTML += opt;
+            });
+        };
+
+        // ==========================================
+        // OPERAÇÕES DO PDV
+        // ==========================================
+        function adicionarItemPDV() {
+            const idProd = document.getElementById('pdv-select-produto').value;
+            const qtd = parseInt(document.getElementById('pdv-qtd-produto').value) || 1;
+            const prod = produtos.find(p => p.id === idProd);
+            
+            if(prod && qtd > 0) { 
+                const itemExistente = carrinhoPDV.find(item => item.id === idProd);
+                if(itemExistente) {
+                    itemExistente.qtd += qtd;
+                } else {
+                    carrinhoPDV.push({ ...prod, qtd: qtd }); 
+                }
+                document.getElementById('pdv-qtd-produto').value = 1;
+                renderizarPDV(); 
+            }
+        }
+
+        function renderizarPDV() {
+            const tbody = document.querySelector('#table-pdv-itens tbody');
+            tbody.innerHTML = '';
+            totalVendaAtual = 0;
+            carrinhoPDV.forEach(item => {
+                const totalItem = item.preco * item.qtd;
+                totalVendaAtual += totalItem;
+                tbody.innerHTML += `<tr><td>${item.nome}</td><td>${item.qtd}</td><td>R$ ${item.preco.toFixed(2)}</td><td>R$ ${totalItem.toFixed(2)}</td></tr>`;
+            });
+            document.getElementById('pdv-total-display').innerText = `R$ ${totalVendaAtual.toFixed(2).replace('.', ',')}`;
+        }
+
+        // ==========================================
+        // LAYOUT DE POSIÇÕES
+        // ==========================================
+        function renderizarLayoutSalao() {
+            const canvas = document.getElementById('map-canvas');
+            canvas.innerHTML = '';
+            const todasMesas = new Set([...Object.keys(posicoesMesas), ...Object.keys(comandas)]);
+            
+            todasMesas.forEach(m => {
+                const pos = posicoesMesas[m] || { x: 100, y: 300 };
+                const temComanda = comandas[m] && comandas[m].length > 0;
+                
+                const node = document.createElement('div');
+                node.className = `table-node ${temComanda ? 'occupied' : ''}`;
+                node.style.left = pos.x + 'px';
+                node.style.top = pos.y + 'px';
+                node.innerText = `MESA ${m}`;
+                node.draggable = true;
+                
+                node.ondragstart = (e) => { 
+                    estaArrastando = true;
+                    fecharTipbox();
+                    e.dataTransfer.setData("text/plain", m); 
+                };
+                
+                node.onclick = (e) => {
+                    if (estaArrastando) { estaArrastando = false; return; }
+                    gerenciarCliqueMesa(m, pos.x, pos.y);
+                };
+                canvas.appendChild(node);
+            });
+        }
+
+        function allowDrop(e) { e.preventDefault(); }
+        
+        function dropMesa(e) {
+            e.preventDefault();
+            const idMesa = e.dataTransfer.getData("text/plain");
+            const rect = document.getElementById('map-canvas').getBoundingClientRect();
+            posicoesMesas[idMesa] = { x: Math.max(0, e.clientX - rect.left - 35), y: Math.max(0, e.clientY - rect.top - 35) };
+            setTimeout(() => { estaArrastando = false; }, 50);
+            renderizarLayoutSalao();
+        }
+
+        function gerenciarCliqueMesa(numMesa, posX, posY) {
+            const tipbox = document.getElementById('map-tipbox');
+            const temComanda = comandas[numMesa] && comandas[numMesa].length > 0;
+            
+            let conteudo = `<h4>Mesa Nº ${numMesa}</h4>`;
+            if (!temComanda) {
+                conteudo += `
+                    <p style="font-size:0.85rem; color:var(--accent-success); font-weight:600; margin-bottom:5px;">Status: Disponível</p>
+                    <button class="btn-success" style="width:100%; padding:8px; font-size:0.85rem;" onclick="abrirModalComanda('${numMesa}')">Abrir Comanda</button>
+                `;
+            } else {
+                let totalMesa = 0;
+                comandas[numMesa].forEach(i => totalMesa += (i.preco * i.qtd));
+                conteudo += `
+                    <p style="font-size:0.85rem; color:var(--accent-danger); font-weight:600; margin-bottom:5px;">Status: Ocupada</p>
+                    <p style="font-size:0.85rem; margin-bottom:8px;">Total Líquido: R$ ${totalMesa.toFixed(2)}</p>
+                    <button style="width:100%; padding:8px; font-size:0.85rem;" onclick="abrirModalComanda('${numMesa}')">Editar Consumo</button>
+                `;
+            }
+            tipbox.innerHTML = conteudo;
+            tipbox.style.left = (posX + 85) + 'px';
+            tipbox.style.top = posY + 'px';
+            tipbox.style.display = 'flex';
+        }
+
+        function fecharTipbox() { document.getElementById('map-tipbox').style.display = 'none'; }
+
+        // ==========================================
+        // GESTÃO DA COMANDA
+        // ==========================================
+        function abrirModalComanda(numMesa) {
+            fecharTipbox();
+            mesaSelecionadaModal = numMesa;
+            if (!comandas[mesaSelecionadaModal]) comandas[mesaSelecionadaModal] = [];
+            document.getElementById('modal-titulo-mesa').innerText = `Gerenciamento de Comanda - Mesa ${numMesa}`;
+            document.getElementById('modal-qtd-produto').value = 1;
+            atualizarListaItensModal();
+            document.getElementById('modal-btn-fechar-conta').onclick = () => fecharComandaMesaDoModal(mesaSelecionadaModal);
+            document.getElementById('comanda-modal').style.display = 'flex';
+        }
+
+        function fecharModalComanda() {
+            document.getElementById('comanda-modal').style.display = 'none';
+            mesaSelecionadaModal = null;
+        }
+
+        function adicionarItemMesaModal() {
+            const idProd = document.getElementById('modal-select-produto').value;
+            const qtd = parseInt(document.getElementById('modal-qtd-produto').value) || 1;
+            const prod = produtos.find(p => p.id === idProd);
+
+            if(!prod || !mesaSelecionadaModal || qtd <= 0) return alert("Verifique os campos informados.");
+
+            const itemExistente = comandas[mesaSelecionadaModal].find(item => item.id === idProd);
+            if(itemExistente) {
+                itemExistente.qtd += qtd;
+            } else {
+                comandas[mesaSelecionadaModal].push({ ...prod, qtd: qtd });
+            }
+            document.getElementById('modal-qtd-produto').value = 1;
+            atualizarListaItensModal();
+            renderizarLayoutSalao();
+        }
+
+        function atualizarListaItensModal() {
+            const container = document.getElementById('modal-lista-itens');
+            container.innerHTML = '';
+            let total = 0;
+
+            if (comandas[mesaSelecionadaModal].length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px;">Nenhum consumo lançado.</p>';
+            } else {
+                comandas[mesaSelecionadaModal].forEach((item, index) => {
+                    const subTotalItem = item.preco * item.qtd;
+                    total += subTotalItem;
+                    container.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid #f1f5f9;">
+                            <span><strong>${item.qtd}x</strong> ${item.nome}</span>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span>R$ ${subTotalItem.toFixed(2)}</span>
+                                <span style="color:var(--accent-danger); cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="removerItemMesaModal(${index})">×</span>
+                            </div>
+                        </div>`;
+                });
+            }
+            document.getElementById('modal-total-comanda').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function removerItemMesaModal(index) {
+            comandas[mesaSelecionadaModal].splice(index, 1);
+            atualizarListaItensModal();
+            renderizarLayoutSalao();
+        }
+
+        function fecharComandaMesaDoModal(numMesa) {
+            if (!comandas[numMesa] || comandas[numMesa].length === 0) return alert("A comanda está vazia.");
+            let totalMesa = 0;
+            comandas[numMesa].forEach(i => totalMesa += (i.preco * i.qtd));
+            totalVendaAtual = totalMesa;
+            carrinhoPDV = JSON.parse(JSON.stringify(comandas[numMesa]));
+            
+            delete comandas[numMesa];
+            fecharModalComanda();
+            renderizarLayoutSalao();
+            renderizarPDV();
+            switchSection('sec-pdv', document.querySelectorAll('.menu-btn')[0]);
+            dispararPopUpPix();
+        }
+
+        document.getElementById('map-canvas').addEventListener('click', function(e) {
+            if (e.target === this) fecharTipbox();
+        });
+
+        // ==========================================
+        // OPERAÇÕES CORRIGIDAS DO POP-UP INDEPENDENTE
+        // ==========================================
+        function dispararPopUpPix() {
+    if(carrinhoPDV.length === 0 || totalVendaAtual === 0) return alert("Nenhum item no checkout para faturar.");
+    
+    // 1. Monta o pacote de dados
+    const dadosPagamento = {
+        status: "PENDENTE",
+        totalVenda: totalVendaAtual,
+        itens: carrinhoPDV,
+        timestamp: Date.now() // Garante que o navegador perceba a mudança
     };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
 
-    const APP_URL = 'view.html';
-    const ADMIN_URL = 'admin.html';
-    const $ = (s)=>document.querySelector(s);
-    const form = $('#loginForm');
-    const err = $('#loginError');
-    const btnDemo = $('#btnDemo');
-    const tenantInput = $('#tenant');
-    const emailInput = $('#email');
+    // 2. Dispara o gatilho para a tela do cliente ler
+    localStorage.setItem("autoMech_compartilhado", JSON.stringify(dadosPagamento));
+    
+    alert("Dados enviados para a tela do cliente!");
+}
 
-    // Decide rota pós-login com base no tenant informado
-    function routeAfterLogin() {
-      const tenantRaw = (tenantInput?.value || 'demo').trim();
-      const tenantUp = tenantRaw.toUpperCase();
-      if (tenantUp === ADMIN_TENANT) {
-        location.href = ADMIN_URL;
-      } else {
-        location.href = `${APP_URL}?tenant=${encodeURIComponent(tenantRaw)}`;
-      }
-    }
+// Chame esta função quando o operador clicar no botão manual de "Confirmar e Limpar Venda" no painel dele
+window.confirmarPagamentoDoPopUp = function() {
+    // Avisa a tela do cliente para voltar ao estado de espera
+    localStorage.setItem("autoMech_compartilhado", JSON.stringify({ status: "FINALIZADO" }));
+    
+    alert("Venda liquidada com sucesso!");
+    carrinhoPDV = []; 
+    totalVendaAtual = 0; 
+    renderizarPDV(); 
+};
 
-    // Se já estiver logado, direciona imediatamente conforme o tenant digitado (ou 'demo' default)
-    onAuthStateChanged(auth, (user) => {
-      if (user) routeAfterLogin();
-    });
-
-    // Login com e-mail/senha
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      err.textContent = '';
-      const email  = emailInput.value.trim();
-      const pass   = $('#password').value;
-      if (!email || !pass) { err.textContent = 'Informe e-mail e senha.'; return; }
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        routeAfterLogin();
-      } catch (e) {
-        // Mensagem amigável
-        const msg = e?.code === 'auth/invalid-credential' ? 'Credenciais inválidas.'
-                  : e?.code === 'auth/user-not-found'     ? 'Usuário não encontrado.'
-                  : e?.code === 'auth/wrong-password'     ? 'Senha incorreta.'
-                  : e?.message || 'Falha no login.';
-        err.textContent = msg;
-      }
-    });
-
-    // Demo: login anônimo e vai para tenant=demo
-    btnDemo.addEventListener('click', async (e)=>{
-      e.preventDefault();
-      err.textContent = '';
-      try {
-        tenantInput.value = 'demo'; // garante a rota demo
-        await signInAnonymously(auth);
-        routeAfterLogin();
-      } catch (e) {
-        err.textContent = e?.message || 'Falha no login anônimo';
-      }
-    });
-
-    // Mensagens rotativas no glass (lado direito)
-    const messages = [
-      'Rotas totalmente mapeadas com acuracidade única',
-      'Monitoramento em tempo real da sua frota com alta performance',
-      'Acesso multi-tenant seguro e flexível para sua operação',
-      'Integrações simples entre veículos e armazéns em diferentes locais',
-      'Controle automático e gestão logística em nuvem'
-    ];
-    const msgEl = document.getElementById('glassMsg');
-    let idx = 0;
-    setInterval(() => {
-      idx = (idx + 1) % messages.length;
-      msgEl.classList.add('hide');
-      setTimeout(() => { msgEl.textContent = messages[idx]; msgEl.classList.remove('hide'); }, 350);
-    }, 6000);
-
-    // SVG decorativo de hubs e conexões
-    const svg = document.getElementById('svgLines');
-    const hubs = [
-      { x: 150, y: 700 }, { x: 250, y: 520 }, { x: 420, y: 610 }, { x: 600, y: 480 },
-      { x: 760, y: 580 }, { x: 820, y: 320 }, { x: 680, y: 260 }, { x: 540, y: 350 }
-    ];
-    hubs.forEach(h => {
-      const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      glow.setAttribute('class', 'hub-shadow'); glow.setAttribute('cx', h.x); glow.setAttribute('cy', h.y); glow.setAttribute('r', 12);
-      svg.appendChild(glow);
-      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      dot.setAttribute('class', 'hub'); dot.setAttribute('cx', h.x); dot.setAttribute('cy', h.y); dot.setAttribute('r', 3.5);
-      svg.appendChild(dot);
-    });
-    function makeCurve(a, b) {
-      const dx = (b.x - a.x), dy = (b.y - a.y);
-      const mx = a.x + dx * 0.5 + (Math.random() - 0.5) * 80;
-      const my = a.y + dy * 0.5 + (Math.random() - 0.5) * 60;
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('class', 'conn');
-      path.setAttribute('d', `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`);
-      path.style.strokeDasharray = '1, 8';
-      path.style.animation = `dashFlow ${2.6 + Math.random()*1.6}s linear infinite`;
-      svg.appendChild(path);
-      return path;
-    }
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes dashFlow {
-        0%   { stroke-dashoffset: 0;   opacity: .65; }
-        50%  { stroke-dashoffset: 40;  opacity: .95; }
-        100% { stroke-dashoffset: 80;  opacity: .65; }
-      }
-    `;
-    document.head.appendChild(style);
-    const paths = [];
-    for (let i = 0; i < hubs.length; i++) { const j = Math.floor(Math.random() * hubs.length); if (j !== i) paths.push(makeCurve(hubs[i], hubs[j])); }
-    for (let i = 0; i < hubs.length - 1; i++) { paths.push(makeCurve(hubs[i], hubs[i+1])); }
-    let tVar = 0;
-    function animateLines(){
-      tVar += 0.016;
-      for (const p of paths){
-        const w = 1.8 + Math.sin(tVar + Math.random()) * 0.4;
-        p.style.strokeWidth = w.toFixed(2);
-      }
-      requestAnimationFrame(animateLines);
-    }
-    animateLines();
-    function fitSvg(){ svg.setAttribute('viewBox', `0 0 1000 1000`); svg.setAttribute('preserveAspectRatio', 'xMidYMid slice'); }
-    window.addEventListener('resize', fitSvg); fitSvg();
-  </script>
+        // Função de retorno de sucesso que a tela pix.html executa ao ser liquidada
+        window.confirmarPagamentoDoPopUp = function() {
+            alert("Venda liquidada via Pix com sucesso!");
+            carrinhoPDV = []; 
+            totalVendaAtual = 0; 
+            renderizarPDV(); 
+        };
+    </script>
 </body>
 </html>
