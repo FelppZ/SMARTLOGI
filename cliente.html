@@ -7,38 +7,212 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-        body { background: #0f172a; color: #f8fafc; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        body { background: #0f172a; color: #f8fafc; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; cursor: pointer; position: relative; }
         
+        /* SLIDESHOW DE FUNDO */
+        .slideshow-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+            background: #0f172a;
+            transition: opacity 0.8s ease-in-out;
+        }
+        .slide-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+        .slide-img.active {
+            opacity: 1;
+        }
+
         /* Estado Inicial (Espera) */
-        .tela-espera { text-align: center; display: flex; flex-direction: column; gap: 20px; }
-        .logo-espera { width: 160px; height: 160px; border-radius: 50%; border: 4px solid #00bdae; margin: 0 auto; animation: pulse 2s infinite; }
+        .tela-espera { 
+            position: relative;
+            z-index: 2;
+            text-align: center; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            align-items: center;
+            transition: opacity 0.8s ease-in-out;
+        }
+        .logo-espera { 
+            width: 160px; 
+            height: 160px; 
+            border-radius: 50%; 
+            border: 4px solid #00bdae; 
+            object-fit: cover;
+            margin: 0 auto; 
+            animation: pulse 2s infinite; 
+            box-shadow: 0 0 30px rgba(0, 189, 174, 0.4);
+        }
         
-        /* Tela de Checkout Ativo */
-        .tela-pagamento { display: none; width: 100%; height: 100vh; grid-template-columns: 1fr 1fr; padding: 40px; gap: 40px; }
-        .col-esquerda { background: #1e293b; border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #334155; }
-        .col-direita { background: #ffffff; border-radius: 24px; color: #0f172a; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        /* BARRA INFERIOR SOBREPOSTA (AGUARDANDO LANÇAMENTOS) */
+        .barra-inferior {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            z-index: 10;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            transition: opacity 0.8s ease-in-out;
+        }
+        .ponto-pulso {
+            width: 12px;
+            height: 12px;
+            background: #00bdae;
+            border-radius: 50%;
+            animation: pulseDot 1.5s infinite;
+        }
+        .mensagem-barra {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #f8fafc;
+            text-transform: uppercase;
+        }
+
+        /* Tela de Checkout Ativo com Transição Suave */
+        .tela-pagamento { 
+            display: none; 
+            opacity: 0;
+            position: absolute; 
+            top: 0;
+            left: 0;
+            z-index: 5; 
+            width: 100%; 
+            height: 100vh; 
+            grid-template-columns: 1fr 1fr; 
+            padding: 40px; 
+            gap: 40px; 
+            background: #0f172a; 
+            transition: opacity 0.8s ease-in-out;
+        }
+        .tela-pagamento.ativo {
+            display: grid;
+            opacity: 1;
+        }
+
+        .col-esquerda { background: #1e293b; border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #334155; position: relative; overflow: hidden; }
+        .col-direita { background: #ffffff; border-radius: 24px; color: #0f172a; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
         
         .lista-itens { flex: 1; margin: 25px 0; overflow-y: auto; padding-right: 10px; }
         .item-linha { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; font-size: 1.2rem; }
         
         .qr-border { background: #ffffff; padding: 20px; border-radius: 24px; border: 2px solid #e2e8f0; display: inline-block; margin-bottom: 20px; }
         
+        /* ANIMAÇÃO DA MAQUININHA DE CARTÃO */
+        .pos-machine-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .pos-body {
+            width: 150px;
+            height: 230px;
+            background: #1e293b;
+            border-radius: 16px;
+            border: 3px solid #475569;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .pos-screen {
+            width: 130px;
+            height: 75px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #34d399;
+            padding: 4px;
+        }
+        .pos-card-slot {
+            width: 100px;
+            height: 8px;
+            background: #0f172a;
+            border-radius: 4px;
+            margin-top: 15px;
+            border: 1px solid #334155;
+        }
+        .animated-card {
+            width: 70px;
+            height: 45px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 6px;
+            position: absolute;
+            top: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: swipeCard 2s infinite ease-in-out;
+        }
+
+        @keyframes swipeCard {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+            30% { transform: translateY(45px) rotate(0deg); opacity: 1; }
+            70% { transform: translateY(75px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110px) rotate(0deg); opacity: 0; }
+        }
+
+        /* Tela de Sucesso Integrada */
+        .tela-sucesso { display: none; position: relative; z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 100vh; background: #064e3b; animation: fadeIn 0.4s ease forwards; }
+        .success-icon { width: 120px; height: 120px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 4.5rem; margin-bottom: 25px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.4); animation: popSuccess 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Tela de Cancelamento Integrada */
+        .tela-cancelado { display: none; position: relative; z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 100vh; background: #7f1d1d; animation: fadeIn 0.4s ease forwards; }
+        .cancel-icon { width: 120px; height: 120px; background: #ef4444; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 4.5rem; margin-bottom: 25px; box-shadow: 0 0 50px rgba(239, 68, 68, 0.4); animation: popSuccess 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
+        @keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 189, 174, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 189, 174, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 189, 174, 0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popSuccess { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
+    <!-- SLIDESHOW COM AS IMAGENS DO POSTIMG -->
+    <div class="slideshow-container" id="slideshow">
+        <img src="https://i.postimg.cc/hP5bxjXh/Chat-GPT-Image-Jul-21-2026-06-38-59-PM.png" class="slide-img active">
+        <img src="https://i.postimg.cc/ncPY7zXF/Chat-GPT-Image-Jul-21-2026-06-39-02-PM.png" class="slide-img">
+        <img src="https://i.postimg.cc/jq8kgRWD/Chat-GPT-Image-Jul-21-2026-06-51-34-PM.png" class="slide-img">
+    </div>
+
     <!-- 1. TELA DE ESPERA / BEM-VINDO -->
-    <div id="view-espera" class="tela-espera">
-        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300" class="logo-espera">
-        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: 1px;">Bem-vindo à <span style="color:#00bdae;">AutoMech</span></h1>
-        <p style="color: #94a3b8; font-size: 1.3rem;">Aguardando lançamento de itens no caixa...</p>
+    <div id="view-espera" class="tela-espera" style="display: flex;"></div>
+
+    <!-- BARRA INFERIOR SOBREPOSTA -->
+    <div id="barra-espera" class="barra-inferior" style="display: flex;">
+        <div class="ponto-pulso"></div>
+        <span class="mensagem-barra">Aguardando lançamentos...</span>
     </div>
 
     <!-- 2. TELA DE PAGAMENTO (MONITORED) -->
     <div id="view-pagamento" class="tela-pagamento">
-        
-        <!-- Extrato da conta -->
         <div class="col-esquerda">
             <div>
                 <h2 style="color: #00bdae; font-size: 1.8rem; margin-bottom: 5px;">Seu Pedido</h2>
@@ -47,32 +221,143 @@
             
             <div class="lista-itens" id="lista-produtos-cliente"></div>
             
-            <div style="display: flex; flex-direction: column; gap: 10px; border-top: 2px dashed #334155; padding-top: 20px;">
-                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #94a3b8;"><span>Subtotal:</span><span id="subtotal">R$ 0,00</span></div>
-                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #818cf8;"><span>Serviço (10%):</span><span id="taxa">R$ 0,00</span></div>
-                <div style="display: flex; justify-content: space-between; font-size: 2rem; font-weight: bold; color: #10b981; margin-top: 5px;">
+            <div style="display: flex; flex-direction: column; gap: 8px; border-top: 2px dashed #334155; padding-top: 15px;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.1rem; color: #94a3b8;"><span>Subtotal:</span><span id="subtotal">R$ 0,00</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.1rem; color: #818cf8;"><span>Serviço (10%):</span><span id="taxa">R$ 0,00</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.8rem; font-weight: bold; color: #10b981; margin-top: 5px;">
                     <span>Total Geral:</span><span id="total-geral">R$ 0,00</span>
                 </div>
             </div>
         </div>
 
-        <!-- QR Code e Instrução -->
-        <div class="col-direita">
-            <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 10px; text-align: center;">Pague com PIX</h2>
-            <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 30px; text-align: center;">Abra o app do seu banco e escaneie o código</p>
-            
-            <div class="qr-border">
-                <div id="qrcode"></div>
-            </div>
-            
-            <p style="font-size: 1.1rem; font-weight: bold; color: #0f172a; margin-top: 10px; background: #f1f5f9; padding: 10px 20px; border-radius: 12px;">
-                Chave CNPJ: 197.924.457-06
-            </p>
+        <!-- COLUNA DIREITA DINÂMICA (PIX OU CARTÃO) -->
+        <div class="col-direita" id="coluna-pagamento-direita">
+            <!-- Conteúdo injetado via JavaScript dependendo da modalidade -->
         </div>
+    </div>
 
+    <!-- 3. TELA DE SUCESSO COBRANÇA -->
+    <div id="view-sucesso" class="tela-sucesso">
+        <div class="success-icon">✓</div>
+        <h1 style="font-size: 3.5rem; font-weight: 900; color: white; margin-bottom: 15px;">Pagamento Confirmado!</h1>
+        <p style="color: #a7f3d0; font-size: 1.5rem; margin-bottom: 10px;">Sua comanda foi baixada com sucesso.</p>
+        <p style="color: #94a3b8; font-size: 1.1rem;">Obrigado por comprar com a AutoMech.</p>
+    </div>
+
+    <!-- 4. TELA DE CANCELAMENTO -->
+    <div id="view-cancelado" class="tela-cancelado">
+        <div class="cancel-icon">✕</div>
+        <h1 style="font-size: 3.5rem; font-weight: 900; color: white; margin-bottom: 15px;">Pedido Cancelado</h1>
+        <p style="color: #fecaca; font-size: 1.5rem; margin-bottom: 10px;">A operação foi cancelada pelo operador.</p>
+        <p style="color: #94a3b8; font-size: 1.1rem;">Retornando ao menu principal...</p>
     </div>
 
     <script>
+        // --- SINTETIZADOR DE ÁUDIO WEB AUDIO API (SONS MAIS SIMPLES E SUAVES) ---
+        let audioCtx = null;
+
+        function inicializarAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function tocarSomAlerta() {
+            try {
+                inicializarAudioContext();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } catch(e) {
+                console.log("Áudio bloqueado pelas políticas do navegador.");
+            }
+        }
+
+        function tocarSomSucesso() {
+            try {
+                inicializarAudioContext();
+                const now = audioCtx.currentTime;
+                
+                [523.25, 659.25].forEach((freq, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + (index * 0.12));
+                    
+                    gain.gain.setValueAtTime(0.12, now + (index * 0.12));
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.12) + 0.35);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start(now + (index * 0.12));
+                    osc.stop(now + (index * 0.12) + 0.35);
+                });
+            } catch(e) {
+                console.log("Áudio bloqueado.");
+            }
+        }
+
+        function tocarSomCancelado() {
+            try {
+                inicializarAudioContext();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } catch(e) {
+                console.log("Áudio bloqueado.");
+            }
+        }
+
+        // --- CONTROLE DO SLIDESHOW DE IMAGENS ---
+        let indiceSlideAtual = 0;
+        const slides = document.querySelectorAll('.slide-img');
+        
+        function proximoSlide() {
+            slides[indiceSlideAtual].classList.remove('active');
+            indiceSlideAtual = (indiceSlideAtual + 1) % slides.length;
+            slides[indiceSlideAtual].classList.add('active');
+        }
+        setInterval(proximoSlide, 6000);
+
+        // --- FORÇAR TELA CHEIA E ATIVAR ÁUDIO VIA CLIQUE ---
+        document.body.addEventListener('click', function() {
+            inicializarAudioContext();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Erro ao ativar Fullscreen: ${err.message}`);
+                });
+            }
+        });
+
         // String PIX Padrão
         function gerarStringPix(chave, valor, beneficiario, city) {
             const cl = chave.replace(/\D/g, '');
@@ -95,24 +380,67 @@
             if (event.key === "autoMech_compartilhado") {
                 const dados = JSON.parse(event.newValue);
 
-                if (!dados || dados.status === "FINALIZADO") {
-                    // Volta para a tela de repouso
-                    document.getElementById('view-espera').style.display = 'flex';
-                    document.getElementById('view-pagamento').style.display = 'none';
+                const viewEspera = document.getElementById('view-espera');
+                const barraEspera = document.getElementById('barra-espera');
+                const slideshow = document.getElementById('slideshow');
+                const viewPagamento = document.getElementById('view-pagamento');
+                const viewSucesso = document.getElementById('view-sucesso');
+                const viewCancelado = document.getElementById('view-cancelado');
+
+                if (!dados) return;
+
+                if (dados.status === "CANCELADO") {
+                    viewEspera.style.display = 'none';
+                    barraEspera.style.display = 'none';
+                    slideshow.style.opacity = '1';
+                    slideshow.style.display = 'block';
+                    viewPagamento.classList.remove('ativo');
+                    viewSucesso.style.display = 'none';
+                    viewCancelado.style.display = 'flex';
+
+                    tocarSomCancelado();
+
+                    setTimeout(() => {
+                        viewCancelado.style.display = 'none';
+                        viewEspera.style.display = 'flex';
+                        barraEspera.style.display = 'flex';
+                        localStorage.removeItem("autoMech_compartilhado");
+                    }, 4000);
                     return;
                 }
 
-                if (dados.status === "PENDENTE") {
+                if (dados.status === "FINALIZADO") {
+                    viewEspera.style.display = 'none';
+                    barraEspera.style.display = 'none';
+                    slideshow.style.opacity = '1';
+                    slideshow.style.display = 'block';
+                    viewPagamento.classList.remove('ativo');
+                    viewCancelado.style.display = 'none';
+                    viewSucesso.style.display = 'flex';
+
+                    tocarSomSucesso();
+
+                    setTimeout(() => {
+                        viewSucesso.style.display = 'none';
+                        viewEspera.style.display = 'flex';
+                        barraEspera.style.display = 'flex';
+                        localStorage.removeItem("autoMech_compartilhado");
+                    }, 4000);
+                    return;
+                }
+
+                if (dados.status === "PENDENTE" || dados.status === "PENDENTE_CARTAO") {
                     const totalVenda = dados.totalVenda;
+                    const isCartao = (dados.status === "PENDENTE_CARTAO");
+                    
+                    // Cálculo original apenas com os 10% de taxa de serviço
                     const taxaServico = totalVenda * 0.10;
                     const valorFinalComTaxa = totalVenda + taxaServico;
 
-                    // Atualiza os valores na tela
                     document.getElementById('subtotal').innerText = `R$ ${totalVenda.toFixed(2).replace('.', ',')}`;
                     document.getElementById('taxa').innerText = `R$ ${taxaServico.toFixed(2).replace('.', ',')}`;
                     document.getElementById('total-geral').innerText = `R$ ${valorFinalComTaxa.toFixed(2).replace('.', ',')}`;
 
-                    // Injeta a lista de itens comprados
                     const container = document.getElementById('lista-produtos-cliente');
                     container.innerHTML = '';
                     dados.itens.forEach(item => {
@@ -123,20 +451,68 @@
                             </div>`;
                     });
 
-                    // Limpa o QR code antigo se houver
-                    document.getElementById('qrcode').innerHTML = '';
+                    const colunaDireita = document.getElementById('coluna-pagamento-direita');
+                    colunaDireita.innerHTML = '';
 
-                    // Gera a nova string de pagamento e renderiza o QR Code
-                    const payload = gerarStringPix("19792445706", valorFinalComTaxa, "AUTOMECH POS", "SAO PAULO");
-                    qrInstancia = new QRCode(document.getElementById('qrcode'), {
-                        text: payload,
-                        width: 280,   // Tamanho maior para exibição em monitores
-                        height: 280
-                    });
+                    if (isCartao) {
+                        colunaDireita.innerHTML = `
+                            <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 5px; text-align: center;">Pagamento via Cartão</h2>
+                            <p style="color: #64748b; font-size: 1rem; margin-bottom: 10px; text-align: center;">Aproxime ou insira na maquininha.</p>
+                            
+                            <div class="pos-machine-container">
+                                <div class="pos-body">
+                                    <div class="pos-screen">
+                                        <span style="font-size: 0.65rem; color: #94a3b8;">TOTAL</span>
+                                        <span style="color:#34d399; font-size: 1.15rem; font-weight: 900;">R$ ${valorFinalComTaxa.toFixed(2).replace('.', ',')}</span>
+                                    </div>
+                                    <div class="pos-card-slot"></div>
+                                    <div class="animated-card"></div>
+                                </div>
+                            </div>
 
-                    // Alterna a interface para o modo de pagamento
-                    document.getElementById('view-espera').style.display = 'none';
-                    document.getElementById('view-pagamento').style.display = 'grid';
+                            <div style="background: #f1f5f9; padding: 10px 15px; border-radius: 12px; width: 100%; border: 2px dashed #cbd5e1; margin-top: 5px;">
+                                <p style="font-size: 0.9rem; font-weight: 600; color: #334155;">Aguardando processamento...</p>
+                            </div>
+                        `;
+                    } else {
+                        colunaDireita.innerHTML = `
+                            <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 10px; text-align: center;">Pague com PIX</h2>
+                            <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 20px; text-align: center;">Abra o app do seu banco e escaneie o código</p>
+                            <div class="qr-border">
+                                <div id="qrcode"></div>
+                            </div>
+                            <p style="font-size: 1.1rem; font-weight: bold; color: #0f172a; margin-top: 5px; background: #f1f5f9; padding: 10px 20px; border-radius: 12px;">
+                                Chave CNPJ: 197.924.457-06
+                            </p>
+                        `;
+
+                        const payload = gerarStringPix("19792445706", valorFinalComTaxa, "AUTOMECH POS", "SAO PAULO");
+                        qrInstancia = new QRCode(document.getElementById('qrcode'), {
+                            text: payload,
+                            width: 250,   
+                            height: 250
+                        });
+                    }
+
+                    viewSucesso.style.display = 'none';
+                    viewCancelado.style.display = 'none';
+                    tocarSomAlerta();
+                    
+                    viewEspera.style.opacity = '0';
+                    barraEspera.style.opacity = '0';
+                    slideshow.style.opacity = '0';
+
+                    setTimeout(() => {
+                        viewEspera.style.display = 'none';
+                        barraEspera.style.display = 'none';
+                        slideshow.style.display = 'none';
+                        
+                        viewEspera.style.opacity = '1';
+                        barraEspera.style.opacity = '1';
+                        slideshow.style.opacity = '1';
+
+                        viewPagamento.classList.add('ativo');
+                    }, 400);
                 }
             }
         });
