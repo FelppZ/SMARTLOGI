@@ -46,16 +46,6 @@
             align-items: center;
             transition: opacity 0.8s ease-in-out;
         }
-        .logo-espera { 
-            width: 160px; 
-            height: 160px; 
-            border-radius: 50%; 
-            border: 4px solid #00bdae; 
-            object-fit: cover;
-            margin: 0 auto; 
-            animation: pulse 2s infinite; 
-            box-shadow: 0 0 30px rgba(0, 189, 174, 0.4);
-        }
         
         /* BARRA INFERIOR SOBREPOSTA (AGUARDANDO LANÇAMENTOS) */
         .barra-inferior {
@@ -179,15 +169,13 @@
             100% { transform: translateY(110px) rotate(0deg); opacity: 0; }
         }
 
-        /* Tela de Sucesso Integrada */
-        .tela-sucesso { display: none; position: relative; z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 100vh; background: #064e3b; animation: fadeIn 0.4s ease forwards; }
+        /* Telas de Feedback (Sucesso / Cancelado) */
+        .tela-sucesso { display: none; position: absolute; top: 0; left: 0; z-index: 20; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 100vh; background: #064e3b; animation: fadeIn 0.4s ease forwards; }
         .success-icon { width: 120px; height: 120px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 4.5rem; margin-bottom: 25px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.4); animation: popSuccess 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-        /* Tela de Cancelamento Integrada */
-        .tela-cancelado { display: none; position: relative; z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 100vh; background: #7f1d1d; animation: fadeIn 0.4s ease forwards; }
+        .tela-cancelado { display: none; position: absolute; top: 0; left: 0; z-index: 20; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 100vh; background: #7f1d1d; animation: fadeIn 0.4s ease forwards; }
         .cancel-icon { width: 120px; height: 120px; background: #ef4444; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 4.5rem; margin-bottom: 25px; box-shadow: 0 0 50px rgba(239, 68, 68, 0.4); animation: popSuccess 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
         @keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 189, 174, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 189, 174, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 189, 174, 0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popSuccess { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -195,7 +183,7 @@
 </head>
 <body>
 
-    <!-- SLIDESHOW COM AS IMAGENS DO POSTIMG -->
+    <!-- SLIDESHOW COM AS IMAGENS DE FUNDO -->
     <div class="slideshow-container" id="slideshow">
         <img src="https://i.postimg.cc/hP5bxjXh/Chat-GPT-Image-Jul-21-2026-06-38-59-PM.png" class="slide-img active">
         <img src="https://i.postimg.cc/ncPY7zXF/Chat-GPT-Image-Jul-21-2026-06-39-02-PM.png" class="slide-img">
@@ -203,15 +191,15 @@
     </div>
 
     <!-- 1. TELA DE ESPERA / BEM-VINDO -->
-    <div id="view-espera" class="tela-espera" style="display: flex;"></div>
+    <div id="view-espera" class="tela-espera"></div>
 
     <!-- BARRA INFERIOR SOBREPOSTA -->
-    <div id="barra-espera" class="barra-inferior" style="display: flex;">
+    <div id="barra-espera" class="barra-inferior">
         <div class="ponto-pulso"></div>
         <span class="mensagem-barra">Aguardando lançamentos...</span>
     </div>
 
-    <!-- 2. TELA DE PAGAMENTO (MONITORED) -->
+    <!-- 2. TELA DE PAGAMENTO -->
     <div id="view-pagamento" class="tela-pagamento">
         <div class="col-esquerda">
             <div>
@@ -230,10 +218,7 @@
             </div>
         </div>
 
-        <!-- COLUNA DIREITA DINÂMICA (PIX OU CARTÃO) -->
-        <div class="col-direita" id="coluna-pagamento-direita">
-            <!-- Conteúdo injetado via JavaScript dependendo da modalidade -->
-        </div>
+        <div class="col-direita" id="coluna-pagamento-direita"></div>
     </div>
 
     <!-- 3. TELA DE SUCESSO COBRANÇA -->
@@ -253,7 +238,6 @@
     </div>
 
     <script>
-        // --- SINTETIZADOR DE ÁUDIO WEB AUDIO API (SONS MAIS SIMPLES E SUAVES) ---
         let audioCtx = null;
 
         function inicializarAudioContext() {
@@ -274,44 +258,37 @@
                 
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(440, now);
-                
                 gain.gain.setValueAtTime(0.1, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
                 
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                
                 osc.start(now);
                 osc.stop(now + 0.3);
-            } catch(e) {
-                console.log("Áudio bloqueado pelas políticas do navegador.");
-            }
+            } catch(e) {}
         }
 
         function tocarSomSucesso() {
             try {
                 inicializarAudioContext();
                 const now = audioCtx.currentTime;
+                const frequencias = [587.33, 880, 1174.66, 1760];
                 
-                [523.25, 659.25].forEach((freq, index) => {
+                frequencias.forEach((freq, index) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + (index * 0.12));
-                    
-                    gain.gain.setValueAtTime(0.12, now + (index * 0.12));
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.12) + 0.35);
+                    osc.type = index % 2 === 0 ? 'triangle' : 'square';
+                    osc.frequency.setValueAtTime(freq, now + (index * 0.06));
+                    gain.gain.setValueAtTime(0.08, now + (index * 0.06));
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + (index * 0.06) + 0.5);
                     
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
-                    
-                    osc.start(now + (index * 0.12));
-                    osc.stop(now + (index * 0.12) + 0.35);
+                    osc.start(now + (index * 0.06));
+                    osc.stop(now + (index * 0.06) + 0.5);
                 });
-            } catch(e) {
-                console.log("Áudio bloqueado.");
-            }
+            } catch(e) {}
         }
 
         function tocarSomCancelado() {
@@ -321,23 +298,20 @@
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, now);
-                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
                 gain.gain.setValueAtTime(0.1, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
                 
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                
                 osc.start(now);
                 osc.stop(now + 0.3);
-            } catch(e) {
-                console.log("Áudio bloqueado.");
-            }
+            } catch(e) {}
         }
 
-        // --- CONTROLE DO SLIDESHOW DE IMAGENS ---
+        // --- CONTROLE DO SLIDESHOW ---
         let indiceSlideAtual = 0;
         const slides = document.querySelectorAll('.slide-img');
         
@@ -348,17 +322,13 @@
         }
         setInterval(proximoSlide, 6000);
 
-        // --- FORÇAR TELA CHEIA E ATIVAR ÁUDIO VIA CLIQUE ---
         document.body.addEventListener('click', function() {
             inicializarAudioContext();
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log(`Erro ao ativar Fullscreen: ${err.message}`);
-                });
+                document.documentElement.requestFullscreen().catch(err => {});
             }
         });
 
-        // String PIX Padrão
         function gerarStringPix(chave, valor, beneficiario, city) {
             const cl = chave.replace(/\D/g, '');
             const vf = valor.toFixed(2);
@@ -373,27 +343,41 @@
             return payload + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
         }
 
-        let qrInstancia = null;
+        // Função centralizada para resetar a tela e retornar ao estado inicial de espera/slideshow
+        function retornarAoInicio() {
+            const viewPagamento = document.getElementById('view-pagamento');
+            const viewSucesso = document.getElementById('view-sucesso');
+            const viewCancelado = document.getElementById('view-cancelado');
+            const slideshow = document.getElementById('slideshow');
+            const barraEspera = document.getElementById('barra-espera');
 
-        // Escuta as alterações vindas do Monitor do Operador
+            viewPagamento.classList.remove('ativo');
+            viewSucesso.style.display = 'none';
+            viewCancelado.style.display = 'none';
+            
+            slideshow.style.display = 'block';
+            slideshow.style.opacity = '1';
+            barraEspera.style.display = 'flex';
+            barraEspera.style.opacity = '1';
+
+            localStorage.removeItem("autoMech_compartilhado");
+        }
+
+        // Escuta os eventos do Operator Monitor
         window.addEventListener('storage', function(event) {
             if (event.key === "autoMech_compartilhado") {
+                if (!event.newValue) return;
                 const dados = JSON.parse(event.newValue);
 
-                const viewEspera = document.getElementById('view-espera');
                 const barraEspera = document.getElementById('barra-espera');
                 const slideshow = document.getElementById('slideshow');
                 const viewPagamento = document.getElementById('view-pagamento');
                 const viewSucesso = document.getElementById('view-sucesso');
                 const viewCancelado = document.getElementById('view-cancelado');
 
-                if (!dados) return;
-
                 if (dados.status === "CANCELADO") {
-                    viewEspera.style.display = 'none';
                     barraEspera.style.display = 'none';
-                    slideshow.style.opacity = '1';
-                    slideshow.style.display = 'block';
+                    slideshow.style.opacity = '0';
                     viewPagamento.classList.remove('ativo');
                     viewSucesso.style.display = 'none';
                     viewCancelado.style.display = 'flex';
@@ -401,19 +385,14 @@
                     tocarSomCancelado();
 
                     setTimeout(() => {
-                        viewCancelado.style.display = 'none';
-                        viewEspera.style.display = 'flex';
-                        barraEspera.style.display = 'flex';
-                        localStorage.removeItem("autoMech_compartilhado");
+                        retornarAoInicio();
                     }, 4000);
                     return;
                 }
 
                 if (dados.status === "FINALIZADO") {
-                    viewEspera.style.display = 'none';
                     barraEspera.style.display = 'none';
-                    slideshow.style.opacity = '1';
-                    slideshow.style.display = 'block';
+                    slideshow.style.opacity = '0';
                     viewPagamento.classList.remove('ativo');
                     viewCancelado.style.display = 'none';
                     viewSucesso.style.display = 'flex';
@@ -421,10 +400,7 @@
                     tocarSomSucesso();
 
                     setTimeout(() => {
-                        viewSucesso.style.display = 'none';
-                        viewEspera.style.display = 'flex';
-                        barraEspera.style.display = 'flex';
-                        localStorage.removeItem("autoMech_compartilhado");
+                        retornarAoInicio();
                     }, 4000);
                     return;
                 }
@@ -433,8 +409,9 @@
                     const totalVenda = dados.totalVenda;
                     const isCartao = (dados.status === "PENDENTE_CARTAO");
                     
-                    // Cálculo original apenas com os 10% de taxa de serviço
-                    const taxaServico = totalVenda * 0.10;
+                    // Verifica se a origem é balcão (se sim, taxa de serviço é 0, senão 10%)
+                    const origem = dados.origem || "mesa"; // Padrão mesa caso não venha informado
+                    const taxaServico = (origem === "balcao") ? 0 : totalVenda * 0.10;
                     const valorFinalComTaxa = totalVenda + taxaServico;
 
                     document.getElementById('subtotal').innerText = `R$ ${totalVenda.toFixed(2).replace('.', ',')}`;
@@ -450,6 +427,8 @@
                                 <span>R$ ${(item.preco * item.qtd).toFixed(2).replace('.', ',')}</span>
                             </div>`;
                     });
+                    
+                    // Restante da renderização do QR Code ou Cartão...
 
                     const colunaDireita = document.getElementById('coluna-pagamento-direita');
                     colunaDireita.innerHTML = '';
@@ -487,7 +466,7 @@
                         `;
 
                         const payload = gerarStringPix("19792445706", valorFinalComTaxa, "AUTOMECH POS", "SAO PAULO");
-                        qrInstancia = new QRCode(document.getElementById('qrcode'), {
+                        new QRCode(document.getElementById('qrcode'), {
                             text: payload,
                             width: 250,   
                             height: 250
@@ -498,19 +477,12 @@
                     viewCancelado.style.display = 'none';
                     tocarSomAlerta();
                     
-                    viewEspera.style.opacity = '0';
                     barraEspera.style.opacity = '0';
                     slideshow.style.opacity = '0';
 
                     setTimeout(() => {
-                        viewEspera.style.display = 'none';
                         barraEspera.style.display = 'none';
                         slideshow.style.display = 'none';
-                        
-                        viewEspera.style.opacity = '1';
-                        barraEspera.style.opacity = '1';
-                        slideshow.style.opacity = '1';
-
                         viewPagamento.classList.add('ativo');
                     }, 400);
                 }
